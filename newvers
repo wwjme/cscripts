@@ -62,7 +62,7 @@ function tick(event){
         var dz = npcPos.getZ() - ownerPos.getZ();
         var distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
 
-        if (distance > 5){  // teleport threshold
+        if (distance > 20){  // teleport threshold
 
             // store current navigation type
             var originalNav = npc.getAi().getNavigationType();
