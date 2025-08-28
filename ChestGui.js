@@ -41,7 +41,7 @@ function interact(event) {
         mySlots.push(guiRef.addItemSlot(pos.x, pos.y));
     }
 
-    guiRef.showPlayerInventory(10 + guiOffsetX, 120 - guiOffsetY); 
+    guiRef.showPlayerInventory(10 + guiOffsetX, 120 - guiOffsetY, false); 
     player.showCustomGui(guiRef);
 }
 
