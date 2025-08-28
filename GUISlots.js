@@ -64,29 +64,41 @@ function customGuiSlotClicked(event) {
         }
     }
 
-    // --- If clicked inventory item AND a slot is highlighted, transfer item with NBT ---
-    if (!slotFound && highlightedSlot != null && stack != null && !stack.isEmpty()) {
+    // --- If clicked inventory item AND a slot is highlighted ---
+    if (!slotFound && highlightedSlot != null) {
         try {
-            var nbt = stack.getItemNbt();
-            var itemCopy;
-            if (nbt != null) {
-                itemCopy = player.world.createItemFromNbt(nbt);
+            if (stack != null && !stack.isEmpty()) {
+                // Transfer item with NBT
+                var nbt = stack.getItemNbt();
+                var itemCopy;
+                if (nbt != null) {
+                    itemCopy = player.world.createItemFromNbt(nbt);
+                } else {
+                    itemCopy = player.world.createItem(stack.getName(), stack.getStackSize());
+                }
+
+                highlightedSlot.setStack(itemCopy);
+                guiRef.update();
+
+                // Remove item from player's inventory
+                var removed = player.removeItem(stack, stack.getStackSize());
+                if (!removed) {
+                    player.message("Warning: Could not remove all items from inventory!");
+                }
+
+                player.message("Transferred " + stack.getDisplayName() + " to highlighted slot!");
             } else {
-                itemCopy = player.world.createItem(stack.getName(), stack.getStackSize());
+                // Inventory slot is empty → give highlighted slot back to player
+                var currentStack = highlightedSlot.getStack();
+                if (currentStack != null && !currentStack.isEmpty()) {
+                    player.giveItem(currentStack);  // gives back item to player
+                    highlightedSlot.setStack(null);  // clear the slot
+                    guiRef.update();
+                    player.message("Returned item to player.");
+                }
             }
-
-            highlightedSlot.setStack(itemCopy);
-            guiRef.update();
-
-            // Remove the same amount from player's inventory
-            var removed = player.removeItem(stack, stack.getStackSize());
-            if (!removed) {
-                player.message("Warning: Could not remove all items from inventory!");
-            }
-
-            player.message("Transferred " + stack.getDisplayName() + " to highlighted slot!");
         } catch(e) {
-            player.message("Failed to transfer item: " + e);
+            player.message("Failed to transfer/return item: " + e);
         }
     }
 
