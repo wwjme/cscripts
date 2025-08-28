@@ -6,7 +6,7 @@ var highlightedSlot = null;
 
 // GUI offsets
 var guiOffsetX = -10; // move GUI right
-var guiOffsetY = 110; // move GUI up
+var guiOffsetY = 90; // move GUI up
 
 // Generate 36 slot positions in 4 rows × 9 columns
 (function generateSlotPositions() {
@@ -68,10 +68,10 @@ function customGuiSlotClicked(event) {
             var y = pos.y;
             var width = 18;
             var height = 18;
-            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xFF0000FF, 2));
-            highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xFF0000FF, 2));
-            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xFF0000FF, 2));
-            highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xFF0000FF, 2));
+            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xFFADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xFFADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xFFADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xFFADD8E6, 2));
             guiRef.update();
             break;
         }
