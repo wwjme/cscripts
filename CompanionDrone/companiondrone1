@@ -30,7 +30,6 @@ function init(event){
 function tick(event){
     var npc = event.npc;
     var world = npc.getWorld();
-
     if (npc.role == null) return;
     var owner = npc.role.getFollowing();
     if (owner == null){
@@ -62,18 +61,12 @@ function tick(event){
         var dz = npcPos.getZ() - ownerPos.getZ();
         var distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
 
-        if (distance > 20){  // teleport threshold
-
-            // store current navigation type
-            var originalNav = npc.getAi().getNavigationType();
-
-            // switch to ground nav to enable teleport
-            npc.getAi().setNavigationType(1); // 1 = ground
-            npc.setPos(ownerPos.getX(), ownerPos.getY(), ownerPos.getZ());
-
-            // switch back to flying nav
-            npc.getAi().setNavigationType(originalNav);
+        if (distance > 20){
+            npc.getAi().setNavigationType(0);
+            npc.setPos(owner.getPos());
+            npc.getAi().setNavigationType(1);
         }
+ 
     } catch(e){}
 
     // --- Owner attacked something -> assist ---
