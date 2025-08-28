@@ -6,6 +6,7 @@ var slotPositions = [       // positions of the 3 slots
     {x: 40, y: 10},
     {x: 70, y: 10}
 ];
+var highlightedSlot = null; // currently highlighted slot
 
 function interact(event) {
     var player = event.player;
@@ -33,34 +34,49 @@ function customGuiSlotClicked(event) {
     var stack = event.stack;
     var player = event.player;
 
-    // --- Clear previous highlight rectangle ---
-    if (highlightLineIds.length > 0) {
-        for (var i = 0; i < highlightLineIds.length; i++) {
-            try { guiRef.removeComponent(highlightLineIds[i]); } catch(e) {}
-        }
-        highlightLineIds = [];
-    }
-
-    // --- Determine which slot was clicked ---
+    // --- If clicked a custom slot, highlight it ---
+    var slotFound = false;
     for (var i = 0; i < mySlots.length; i++) {
         if (clickedSlot === mySlots[i]) {
+            slotFound = true;
+            highlightedSlot = clickedSlot;
+
+            // Clear previous highlights
+            if (highlightLineIds.length > 0) {
+                for (var j = 0; j < highlightLineIds.length; j++) {
+                    try { guiRef.removeComponent(highlightLineIds[j]); } catch(e) {}
+                }
+                highlightLineIds = [];
+            }
+
+            // Draw rectangle around the clicked slot
             var pos = slotPositions[i];
             var x = pos.x;
             var y = pos.y;
             var width = 18;
             var height = 18;
-
-            // Draw rectangle around the clicked slot
             highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xFF0000FF, 2));       // Top
             highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xFF0000FF, 2)); // Bottom
             highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xFF0000FF, 2));  // Left
             highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xFF0000FF, 2)); // Right
-            break; // only highlight one slot
+            guiRef.update();
+            break;
         }
     }
 
-    // Update GUI to show changes
-    guiRef.update();
+    // --- If clicked inventory item AND a slot is highlighted, transfer item ---
+    if (!slotFound && highlightedSlot != null && stack != null && !stack.isEmpty()) {
+        try {
+            // Create a copy of the clicked item and put it into the highlighted slot
+            var itemCopy = player.world.createItem(stack.getName(), stack.getStackSize());
+            highlightedSlot.setStack(itemCopy);
+            guiRef.update();
+
+            player.message("Transferred " + stack.getDisplayName() + " to highlighted slot!");
+        } catch(e) {
+            player.message("Failed to transfer item: " + e);
+        }
+    }
 
     // --- Message about clicked slot ---
     if (stack != null && !stack.isEmpty()) {
