@@ -61,7 +61,7 @@ function tick(event){
         var dz = npcPos.getZ() - ownerPos.getZ();
         var distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
 
-        if (distance > 20){
+        if (distance > 30){
             npc.getAi().setNavigationType(0);
             npc.setPos(owner.getPos());
             npc.getAi().setNavigationType(1);
