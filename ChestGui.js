@@ -68,10 +68,10 @@ function customGuiSlotClicked(event) {
             var y = pos.y;
             var width = 18;
             var height = 18;
-            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xFFADD8E6, 2));
-            highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xFFADD8E6, 2));
-            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xFFADD8E6, 2));
-            highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xFFADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xADD8E6, 2));
             guiRef.update();
             break;
         }
