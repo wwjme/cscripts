@@ -64,8 +64,8 @@ function customGuiSlotClicked(event) {
             }
 
             var pos = slotPositions[i];
-            var x = pos.x;
-            var y = pos.y;
+            var x = pos.x - 1;
+            var y = pos.y - 1;
             var width = 18;
             var height = 18;
             highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xADD8E6, 2));
