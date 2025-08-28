@@ -1,62 +1,68 @@
-var myGuiSlot;        // store the special GUI slot
-var highlighted = false; // tracks whether the rectangle is visible
+var guiRef;                 // global GUI reference
+var mySlots = [];           // array to store our 3 special slots
+var highlightLineIds = [];  // store colored line IDs for the rectangle
+var slotPositions = [       // positions of the 3 slots
+    {x: 10, y: 10},
+    {x: 40, y: 10},
+    {x: 70, y: 10}
+];
 
 function interact(event) {
     var player = event.player;
     var api = event.API;
 
     // Create GUI
-    var gui = api.createCustomGui(176, 166, 0, true, player);
+    guiRef = api.createCustomGui(176, 166, 0, true, player);
 
-    // Add one draggable slot and store its reference
-    myGuiSlot = gui.addItemSlot(10, 10);
+    // Add 3 draggable slots
+    mySlots = [];
+    for (var i = 0; i < 3; i++) {
+        var pos = slotPositions[i];
+        mySlots.push(guiRef.addItemSlot(pos.x, pos.y));
+    }
 
     // Show player inventory
-    gui.showPlayerInventory(10, 50);
+    guiRef.showPlayerInventory(10, 50);
 
     // Open GUI
-    player.showCustomGui(gui);
+    player.showCustomGui(guiRef);
 }
 
 function customGuiSlotClicked(event) {
-    var clickedSlot = event.slot; // CustomGuiItemSlotWrapper
+    var clickedSlot = event.slot;
     var stack = event.stack;
     var player = event.player;
-    var api = event.API;
 
-    // Determine if we should highlight
-    if (clickedSlot === myGuiSlot) {
-        highlighted = true; // show rectangle
-    } else {
-        highlighted = false; // remove rectangle
+    // --- Clear previous highlight rectangle ---
+    if (highlightLineIds.length > 0) {
+        for (var i = 0; i < highlightLineIds.length; i++) {
+            try { guiRef.removeComponent(highlightLineIds[i]); } catch(e) {}
+        }
+        highlightLineIds = [];
     }
 
-    // Recreate GUI
-    var gui = api.createCustomGui(176, 166, 0, true, player);
+    // --- Determine which slot was clicked ---
+    for (var i = 0; i < mySlots.length; i++) {
+        if (clickedSlot === mySlots[i]) {
+            var pos = slotPositions[i];
+            var x = pos.x;
+            var y = pos.y;
+            var width = 18;
+            var height = 18;
 
-    // Add the special slot again
-    myGuiSlot = gui.addItemSlot(10, 10);
-
-    // Draw rectangle if highlighted
-    if (highlighted) {
-        var x = 10;
-        var y = 10;
-        var width = 18;
-        var height = 18;
-
-        gui.addColoredLine(1, x, y, x + width, y, 0xFF0000FF, 2);       // Top
-        gui.addColoredLine(2, x, y + height, x + width, y + height, 0xFF0000FF, 2); // Bottom
-        gui.addColoredLine(3, x, y, x, y + height, 0xFF0000FF, 2);  // Left
-        gui.addColoredLine(4, x + width, y, x + width, y + height, 0xFF0000FF, 2); // Right
+            // Draw rectangle around the clicked slot
+            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xFF0000FF, 2));       // Top
+            highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xFF0000FF, 2)); // Bottom
+            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xFF0000FF, 2));  // Left
+            highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xFF0000FF, 2)); // Right
+            break; // only highlight one slot
+        }
     }
 
-    // Show player inventory
-    gui.showPlayerInventory(10, 50);
+    // Update GUI to show changes
+    guiRef.update();
 
-    // Reopen GUI
-    player.showCustomGui(gui);
-
-    // Send message about clicked slot
+    // --- Message about clicked slot ---
     if (stack != null && !stack.isEmpty()) {
         player.message("You clicked: " + stack.getDisplayName());
     } else {
