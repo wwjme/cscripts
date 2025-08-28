@@ -1,4 +1,5 @@
-var myGuiSlot; // store the special slot
+var myGuiSlot;        // store the special GUI slot
+var highlighted = false; // tracks whether the rectangle is visible
 
 function interact(event) {
     var player = event.player;
@@ -23,15 +24,21 @@ function customGuiSlotClicked(event) {
     var player = event.player;
     var api = event.API;
 
-    // Only trigger for our special GUI slot
+    // Determine if we should highlight
     if (clickedSlot === myGuiSlot) {
-        // Recreate the GUI to add colored rectangle
-        var gui = api.createCustomGui(176, 166, 0, true, player);
+        highlighted = true; // show rectangle
+    } else {
+        highlighted = false; // remove rectangle
+    }
 
-        // Add the slot again
-        myGuiSlot = gui.addItemSlot(10, 10);
+    // Recreate GUI
+    var gui = api.createCustomGui(176, 166, 0, true, player);
 
-        // Draw blue rectangle around the slot
+    // Add the special slot again
+    myGuiSlot = gui.addItemSlot(10, 10);
+
+    // Draw rectangle if highlighted
+    if (highlighted) {
         var x = 10;
         var y = 10;
         var width = 18;
@@ -41,25 +48,18 @@ function customGuiSlotClicked(event) {
         gui.addColoredLine(2, x, y + height, x + width, y + height, 0xFF0000FF, 2); // Bottom
         gui.addColoredLine(3, x, y, x, y + height, 0xFF0000FF, 2);  // Left
         gui.addColoredLine(4, x + width, y, x + width, y + height, 0xFF0000FF, 2); // Right
+    }
 
-        // Show player inventory
-        gui.showPlayerInventory(10, 50);
+    // Show player inventory
+    gui.showPlayerInventory(10, 50);
 
-        // Reopen GUI so rectangle is visible
-        player.showCustomGui(gui);
+    // Reopen GUI
+    player.showCustomGui(gui);
 
-        // Message about clicked slot
-        if (stack != null && !stack.isEmpty()) {
-            player.message("You clicked the special GUI slot containing: " + stack.getDisplayName());
-        } else {
-            player.message("You clicked the special GUI slot which is empty.");
-        }
+    // Send message about clicked slot
+    if (stack != null && !stack.isEmpty()) {
+        player.message("You clicked: " + stack.getDisplayName());
     } else {
-        // Clicked some other slot (like inventory)
-        if (stack != null && !stack.isEmpty()) {
-            player.message("You clicked another slot containing: " + stack.getDisplayName());
-        } else {
-            player.message("You clicked another slot which is empty.");
-        }
+        player.message("You clicked an empty slot.");
     }
 }
