@@ -78,6 +78,12 @@ function customGuiSlotClicked(event) {
             highlightedSlot.setStack(itemCopy);
             guiRef.update();
 
+            // Remove the same amount from player's inventory
+            var removed = player.removeItem(stack, stack.getStackSize());
+            if (!removed) {
+                player.message("Warning: Could not remove all items from inventory!");
+            }
+
             player.message("Transferred " + stack.getDisplayName() + " to highlighted slot!");
         } catch(e) {
             player.message("Failed to transfer item: " + e);
