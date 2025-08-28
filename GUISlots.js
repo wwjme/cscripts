@@ -1,7 +1,7 @@
-var guiRef;                 // global GUI reference
-var mySlots = [];           // array to store our 3 special slots
-var highlightLineIds = [];  // store colored line IDs for the rectangle
-var slotPositions = [       // positions of the 3 slots
+var guiRef;                 
+var mySlots = [];           
+var highlightLineIds = [];  
+var slotPositions = [       
     {x: 10, y: 10},
     {x: 40, y: 10},
     {x: 70, y: 10}
@@ -64,11 +64,17 @@ function customGuiSlotClicked(event) {
         }
     }
 
-    // --- If clicked inventory item AND a slot is highlighted, transfer item ---
+    // --- If clicked inventory item AND a slot is highlighted, transfer item with NBT ---
     if (!slotFound && highlightedSlot != null && stack != null && !stack.isEmpty()) {
         try {
-            // Create a copy of the clicked item and put it into the highlighted slot
-            var itemCopy = player.world.createItem(stack.getName(), stack.getStackSize());
+            var nbt = stack.getItemNbt();
+            var itemCopy;
+            if (nbt != null) {
+                itemCopy = player.world.createItemFromNbt(nbt);
+            } else {
+                itemCopy = player.world.createItem(stack.getName(), stack.getStackSize());
+            }
+
             highlightedSlot.setStack(itemCopy);
             guiRef.update();
 
