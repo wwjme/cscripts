@@ -27,7 +27,7 @@ function interact(event) {
     }
 
     // Show player inventory
-    guiRef.showPlayerInventory(10, 50);
+    guiRef.showPlayerInventory(10, 50, false);
 
     // Open GUI
     player.showCustomGui(guiRef);
@@ -59,10 +59,10 @@ function customGuiSlotClicked(event) {
             var y = pos.y;
             var width = 18;
             var height = 18;
-            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xFF0000FF, 2));       // Top
-            highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xFF0000FF, 2)); // Bottom
-            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xFF0000FF, 2));  // Left
-            highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xFF0000FF, 2)); // Right
+            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xADD8E6, 2));       // Top
+            highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xADD8E6, 2)); // Bottom
+            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xADD8E6, 2));  // Left
+            highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xADD8E6, 2)); // Right
             guiRef.update();
             break;
         }
