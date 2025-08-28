@@ -1,7 +1,7 @@
-var guiRef;                 
-var mySlots = [];           
-var highlightLineIds = [];  
-var slotPositions = [       
+var guiRef;                 // global GUI reference
+var mySlots = [];           // array to store our 3 special slots
+var highlightLineIds = [];  // store colored line IDs for the rectangle
+var slotPositions = [       // positions of the 3 slots
     {x: 10, y: 10},
     {x: 40, y: 10},
     {x: 70, y: 10}
@@ -11,6 +11,10 @@ var highlightedSlot = null; // currently highlighted slot
 function interact(event) {
     var player = event.player;
     var api = event.API;
+
+    // Reset highlights and selected slot when opening GUI
+    highlightedSlot = null;
+    highlightLineIds = [];
 
     // Create GUI
     guiRef = api.createCustomGui(176, 166, 0, true, player);
@@ -64,41 +68,39 @@ function customGuiSlotClicked(event) {
         }
     }
 
-    // --- If clicked inventory item AND a slot is highlighted ---
+    // --- If clicked inventory item AND a slot is highlighted, transfer/swap item ---
     if (!slotFound && highlightedSlot != null) {
-        try {
-            if (stack != null && !stack.isEmpty()) {
-                // Transfer item with NBT
-                var nbt = stack.getItemNbt();
-                var itemCopy;
-                if (nbt != null) {
-                    itemCopy = player.world.createItemFromNbt(nbt);
-                } else {
-                    itemCopy = player.world.createItem(stack.getName(), stack.getStackSize());
-                }
-
+        if (stack != null && !stack.isEmpty()) {
+            try {
+                // Copy inventory item including NBT
+                var itemCopy = player.world.createItemFromNbt(stack.getItemNbt());
+                
+                // Swap with slot
+                var oldSlotItem = highlightedSlot.getStack();
                 highlightedSlot.setStack(itemCopy);
+
+                // Give old slot item back to player if exists
+                if (oldSlotItem != null && !oldSlotItem.isEmpty()) {
+                    player.giveItem(oldSlotItem);
+                }
+
+                // Remove one stack from inventory
+                player.removeItem(stack, stack.getStackSize());
+
                 guiRef.update();
-
-                // Remove item from player's inventory
-                var removed = player.removeItem(stack, stack.getStackSize());
-                if (!removed) {
-                    player.message("Warning: Could not remove all items from inventory!");
-                }
-
                 player.message("Transferred " + stack.getDisplayName() + " to highlighted slot!");
-            } else {
-                // Inventory slot is empty → give highlighted slot back to player
-                var currentStack = highlightedSlot.getStack();
-                if (currentStack != null && !currentStack.isEmpty()) {
-                    player.giveItem(currentStack);  // gives back item to player
-                    highlightedSlot.setStack(null);  // clear the slot
-                    guiRef.update();
-                    player.message("Returned item to player.");
-                }
+            } catch(e) {
+                player.message("Failed to transfer item: " + e);
             }
-        } catch(e) {
-            player.message("Failed to transfer/return item: " + e);
+        } else {
+            // Clicked empty inventory slot, return highlighted slot item to player
+            var oldSlotItem = highlightedSlot.getStack();
+            if (oldSlotItem != null && !oldSlotItem.isEmpty()) {
+                player.giveItem(oldSlotItem);
+                highlightedSlot.setStack(player.world.createItem("minecraft:air", 1)); // clear slot
+                guiRef.update();
+                player.message("Returned item to player from highlighted slot.");
+            }
         }
     }
 
