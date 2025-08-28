@@ -35,11 +35,11 @@ function timer(event) {
                 var motionZ = step * Math.cos(toRadians(rot));
                 var motionY = 0;
 
-                // Adjust vertical motion based on pitch
-                if (pitch >= 60) {
-                    motionY = step; // go up
-                } else if (pitch <= -45) {
-                    motionY = -step; // go down
+                // Flip vertical motion
+                if (pitch >= 20) {
+                    motionY = -step; // look up -> go up
+                } else if (pitch <= -20) {
+                    motionY = step;  // look down -> go down
                 }
 
                 npc.setMotionX(motionX);
