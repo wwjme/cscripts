@@ -19,40 +19,41 @@ function toRadians(angle) {
 
 function timer(event) {
     if (event.id == flightTimerId) {
-        if (event.npc.getRiders().length != 0) {
-            pl = event.npc.getRiders()[0];
+        var npc = event.npc;
+        var riders = npc.getRiders();
+        if (riders.length > 0) {
+            pl = riders[0];
+
             if (pl.mainhandItem && pl.mainhandItem.displayName == "Flight Control") {
-                step = 5;
-                speed = 4;
+                step = 0.3; // motion scale
                 pitch = Number(pl.getPitch().toFixed(2));
-
-                if (pitch >= 60) {
-                    ny--;
-                    step = 1;
-                    speed = 2;
-                }
-                if (pitch <= -45) {
-                    ny++;
-                    step = 1;
-                    speed = 2;
-                }
-
                 rot = Number(pl.getRotation().toFixed(2));
-                if (rot < 0) { rot = 360 + rot; }
+                if (rot < 0) { rot += 360; }
 
-                xoff = step * Number(Math.sin(toRadians(rot)).toFixed(2)) * -1;
-                zoff = step * Number(Math.cos(toRadians(rot)).toFixed(2));
+                // Calculate motion vectors
+                var motionX = step * -Math.sin(toRadians(rot));
+                var motionZ = step * Math.cos(toRadians(rot));
+                var motionY = 0;
 
-                event.npc.navigateTo(event.npc.x + xoff, ny, event.npc.z + zoff, speed);
+                // Adjust vertical motion based on pitch
+                if (pitch >= 60) {
+                    motionY = step; // go up
+                } else if (pitch <= -45) {
+                    motionY = -step; // go down
+                }
+
+                npc.setMotionX(motionX);
+                npc.setMotionY(motionY);
+                npc.setMotionZ(motionZ);
             } else {
-                event.npc.clearNavigation();
+                npc.setMotionX(0);
+                npc.setMotionY(0);
+                npc.setMotionZ(0);
             }
         } else {
-            event.npc.clearNavigation();
+            npc.setMotionX(0);
+            npc.setMotionY(0);
+            npc.setMotionZ(0);
         }
-    } else {
-        event.npc.clearNavigation();
-        ny = 70;
-        event.npc.timers.stop(flightTimerId);
     }
 }
