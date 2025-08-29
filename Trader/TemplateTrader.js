@@ -8,11 +8,11 @@ var storedSlotItems = [];
 // ========== Layout ==========
 var slotPositions = [];
 var startX = -110;          // starting X for the first column
-var startY = -120;        // starting Y for the first row
-var rowSpacing = 20;      // vertical spacing between rows
-var colSpacing = 80;      // horizontal spacing between columns
-var numRows = 10;          // rows per column
-var numCols = 5;          // number of columns
+var startY = -120;          // starting Y for the first row
+var rowSpacing = 20;        // vertical spacing between rows
+var colSpacing = 80;        // horizontal spacing between columns
+var numRows = 10;           // rows per column
+var numCols = 5;            // number of columns
 
 // relative X offsets for slots in a row
 var price1OffsetX = 0;
@@ -46,6 +46,14 @@ function interact(event) {
 
     guiRef = api.createCustomGui(176, 166, 0, true, player);
 
+    // ===== Admin button =====
+    var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
+    if(adminMode){
+        var Texture1 = "minecraft:textures/gui/demo_background.png";
+        guiRef.addTexturedButton(2,"", 300, -120, 20, 20, Texture1);
+    }
+
+    // Add all slots
     mySlots = slotPositions.map(function(pos, i) {
         var slot = guiRef.addItemSlot(pos.x, pos.y);
 
@@ -59,6 +67,13 @@ function interact(event) {
 
     guiRef.showPlayerInventory(0, 90, false); 
     player.showCustomGui(guiRef);
+}
+
+// ========== Button Click ==========
+function customGuiButton(event){
+    if(event.buttonId == 2){
+        event.player.message("You pressed one of the buttons");
+    }
 }
 
 // ========== Slot Click ==========
