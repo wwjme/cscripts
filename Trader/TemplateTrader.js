@@ -1,15 +1,25 @@
 var guiRef;                 
 var mySlots = [];           
 var highlightLineIds = [];  
-var slotPositions = [       
-    {x: 10, y: 10}, // price slot 1
-    {x: 28, y: 10}, // price slot 2
-    {x: 55, y: 10}  // bought item
-];
 var highlightedSlot = null; 
 var lastNpc = null;         
 var storedSlotItems = [];   
 
+// ========== Layout ==========
+var slotPositions = [];
+var startX = -100;      // starting X for the first price slot
+var startY = -110;     // starting Y for the first row
+var rowSpacing = 20;  // vertical spacing between rows
+var numRows = 8;      // total number of buyable rows
+
+for (var row = 0; row < numRows; row++) {
+    var y = startY + row * rowSpacing;
+    slotPositions.push({x: 10, y: y});  // price slot 1
+    slotPositions.push({x: 28, y: y});  // price slot 2
+    slotPositions.push({x: 55, y: y});  // bought item slot
+}
+
+// ========== Open GUI ==========
 function interact(event) {
     var player = event.player;
     var api = event.API;
@@ -17,15 +27,17 @@ function interact(event) {
     lastNpc = event.npc; 
     var npcData = lastNpc.getStoreddata();
 
+    // Fill storedSlotItems with null if first time
     storedSlotItems = npcData.has("SlotItems") 
         ? JSON.parse(npcData.get("SlotItems")) 
-        : [null, null, null];
+        : Array(slotPositions.length).fill(null);
 
     highlightedSlot = null;
     highlightLineIds = [];
 
     guiRef = api.createCustomGui(176, 166, 0, true, player);
 
+    // Add all slots
     mySlots = slotPositions.map(function(pos, i) {
         var slot = guiRef.addItemSlot(pos.x, pos.y);
 
@@ -38,10 +50,10 @@ function interact(event) {
     });
 
     guiRef.showPlayerInventory(10, 50, false); 
-
     player.showCustomGui(guiRef);
 }
 
+// ========== Slot Click ==========
 function customGuiSlotClicked(event) {
     var clickedSlot = event.slot;
     var stack = event.stack;
@@ -51,7 +63,7 @@ function customGuiSlotClicked(event) {
     var slotIndex = mySlots.indexOf(clickedSlot);
 
     if(adminMode) {
-        // Admin mode: normal editing
+        // ===== Admin Mode: normal editing =====
         if(slotIndex !== -1) {
             highlightedSlot = clickedSlot;
             for(var i=0;i<highlightLineIds.length;i++){
@@ -107,14 +119,15 @@ function customGuiSlotClicked(event) {
             guiRef.update();
         } catch(e) {}
     } else {
-        // Buyer mode: only right slot is clickable
-        if(slotIndex !== 2) return; // only bought item slot
+        // ===== Buyer Mode: right slot of any row =====
+        if(slotIndex % 3 !== 2) return; // only bought item slots
 
-        var priceSlots = [mySlots[0], mySlots[1]];
-        var boughtItem = mySlots[2].getStack();
+        var rowStart = slotIndex - 2; // first slot index in this row
+        var priceSlots = [mySlots[rowStart], mySlots[rowStart+1]];
+        var boughtItem = mySlots[slotIndex].getStack();
         if(!boughtItem || boughtItem.isEmpty()) return;
 
-        // Check if player has enough items using same logic as original transfer
+        // Check if player has enough items
         for(var i=0;i<priceSlots.length;i++){
             var priceStack = priceSlots[i].getStack();
             if(priceStack && !priceStack.isEmpty()) {
@@ -133,7 +146,7 @@ function customGuiSlotClicked(event) {
             }
         }
 
-        // Remove price items from player inventory
+        // Remove price items
         for(var i=0;i<priceSlots.length;i++){
             var priceStack = priceSlots[i].getStack();
             if(priceStack && !priceStack.isEmpty()) {
@@ -156,6 +169,7 @@ function customGuiSlotClicked(event) {
     }
 }
 
+// ========== Save GUI ==========
 function customGuiClosed(event) {
     if(!lastNpc) return;
 
