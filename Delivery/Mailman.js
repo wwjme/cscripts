@@ -63,9 +63,11 @@ function interact(event) {
     // --- If holding the key item -> give ONE random reward (no GUI) ---
     if (handItem && !handItem.isEmpty() && storedSlotItems[GRID_SIZE]) {
         try {
-            var required = player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[GRID_SIZE]));
-            var matches = (handItem.getName() === required.getName()) &&
-                          (handItem.getItemDamage() === required.getItemDamage());
+            var requiredNbt = api.stringToNbt(storedSlotItems[GRID_SIZE]);
+            var required = player.world.createItemFromNbt(requiredNbt);
+
+            // ✅ Full NBT check, not just name/damage
+            var matches = handItem.getItemNbt().toJsonString() === required.getItemNbt().toJsonString();
 
             if (matches) {
                 player.removeItem(handItem, 1);
