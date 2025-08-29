@@ -3,8 +3,8 @@ var mySlots = [];
 var highlightLineIds = [];  
 var slotPositions = [       
     {x: 10, y: 10}, // price slot 1
-    {x: 40, y: 10}, // price slot 2
-    {x: 70, y: 10}  // bought item
+    {x: 28, y: 10}, // price slot 2
+    {x: 55, y: 10}  // bought item
 ];
 var highlightedSlot = null; 
 var lastNpc = null;         
