@@ -10,6 +10,7 @@ var highlightedSlot = null;
 var lastNpc = null;         
 var storedSlotItems = [];   
 
+
 function interact(event) {
     var player = event.player;
     var api = event.API;
