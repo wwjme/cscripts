@@ -1,12 +1,11 @@
 var guiRef;                 
 var mySlots = [];           
 var highlightLineIds = [];  
-var rows = 3;
-var cols = 9;
-var slotSize = 18;          // standard slot size
-var slotPadding = 0;        // remove extra space between slots
-var offsetX = 0;           // horizontal shift of the chest
-var offsetY = -40;           // vertical shift of the chest
+var slotPositions = [       
+    {x: 10, y: 10},
+    {x: 40, y: 10},
+    {x: 70, y: 10}
+];
 var highlightedSlot = null; 
 var lastNpc = null;         
 var storedSlotItems = [];   
@@ -20,32 +19,25 @@ function interact(event) {
 
     storedSlotItems = npcData.has("SlotItems") 
         ? JSON.parse(npcData.get("SlotItems")) 
-        : Array(rows * cols).fill(null);
+        : [null, null, null];
 
     highlightedSlot = null;
     highlightLineIds = [];
 
     guiRef = api.createCustomGui(176, 166, 0, true, player);
 
-    mySlots = [];
-    for (var r = 0; r < rows; r++) {
-        for (var c = 0; c < cols; c++) {
-            var x = offsetX + c * (slotSize + slotPadding);
-            var y = offsetY + r * (slotSize + slotPadding);
-            var slot = guiRef.addItemSlot(x, y);
-            var index = r * cols + c;
+    mySlots = slotPositions.map(function(pos, i) {
+        var slot = guiRef.addItemSlot(pos.x, pos.y);
 
-            if(storedSlotItems[index]) {
-                try {
-                    slot.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[index])));
-                } catch(e) {}
-            }
-
-            mySlots.push(slot);
+        if(storedSlotItems[i]) {
+            try {
+                slot.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[i])));
+            } catch(e) {}
         }
-    }
+        return slot;
+    });
 
-    guiRef.showPlayerInventory(offsetX, offsetY + rows * slotSize + 5, false); // inventory below the chest
+    guiRef.showPlayerInventory(10, 50, false);
     player.showCustomGui(guiRef);
 }
 
@@ -60,11 +52,8 @@ function customGuiSlotClicked(event) {
         highlightLineIds.forEach(function(id) { try { guiRef.removeComponent(id); } catch(e) {} });
         highlightLineIds = [];
 
-        var row = Math.floor(slotIndex / cols);
-        var col = slotIndex % cols;
-        var x = offsetX + col * (slotSize + slotPadding);
-        var y = offsetY + row * (slotSize + slotPadding);
-        var w = slotSize, h = slotSize;
+        var pos = slotPositions[slotIndex];
+        var x = pos.x, y = pos.y, w = 18, h = 18;
         highlightLineIds.push(guiRef.addColoredLine(1, x, y, x+w, y, 0xADD8E6, 2));
         highlightLineIds.push(guiRef.addColoredLine(2, x, y+h, x+w, y+h, 0xADD8E6, 2));
         highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y+h, 0xADD8E6, 2));
