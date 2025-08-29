@@ -3,9 +3,9 @@ var mySlots = [];
 var highlightLineIds = [];
 
 // === CONFIG ===
-var GRID_ROWS = 3;   // Change this
-var GRID_COLS = 3;   // Change this
-var START_X   = 60;  // grid offset X (shifted right to leave key slot on left)
+var GRID_ROWS = 3;
+var GRID_COLS = 3;
+var START_X   = 60;  
 var START_Y   = -50;  
 var COL_SPACING = 20;
 var ROW_SPACING = 20;
@@ -19,18 +19,32 @@ for (var row = 0; row < GRID_ROWS; row++) {
         slotPositions.push({x: START_X + col * COL_SPACING, y: START_Y + row * ROW_SPACING});
     }
 }
-var GRID_SIZE = slotPositions.length;  // total reward slots
-var STORAGE_SIZE = GRID_SIZE + 1;      // grid slots + key slot
+var GRID_SIZE = slotPositions.length;  
+var STORAGE_SIZE = GRID_SIZE + 1;      
 
 var highlightedSlot = null;
 var lastNpc = null;
-var storedSlotItems = []; // array of nbt-strings or null
+var storedSlotItems = []; 
 
-// Helper: create array filled with null
 function makeNullArray(n){
     var a = new Array(n);
     for (var i=0;i<n;i++) a[i] = null;
     return a;
+}
+
+// Compare items strictly (id + damage + NBT)
+function itemsEqualStrict(api, hand, required) {
+    if (!hand || !required) return false;
+    if (hand.getName() !== required.getName()) return false;
+    if (hand.getItemDamage() !== required.getItemDamage()) return false;
+
+    try {
+        var hNbt = hand.getItemNbt().toJsonString();
+        var rNbt = required.getItemNbt().toJsonString();
+        return hNbt === rNbt;
+    } catch(e) {
+        return false;
+    }
 }
 
 // ---------- INTERACT ----------
@@ -60,19 +74,17 @@ function interact(event) {
 
     var handItem = player.getMainhandItem();
 
-    // --- If holding the key item -> give rewards (no GUI) ---
+    // --- If holding the key item -> give rewards ---
     if (handItem && !handItem.isEmpty() && storedSlotItems[GRID_SIZE]) {
         try {
-            var requiredNbt = api.stringToNbt(storedSlotItems[GRID_SIZE]);
-            var handNbt = handItem.getItemNbt();
+            var required = player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[GRID_SIZE]));
 
-            // Compare full NBT (ensures name, lore, enchants, etc. all match)
-            var matches = handNbt.toJsonString() === requiredNbt.toJsonString();
+            var matches = itemsEqualStrict(api, handItem, required);
 
             if (matches) {
                 player.removeItem(handItem, 1);
 
-                // Give rewards
+                // Give all rewards
                 for (var i = 0; i < GRID_SIZE; i++) {
                     if (storedSlotItems[i]) {
                         try {
@@ -82,7 +94,7 @@ function interact(event) {
                     }
                 }
 
-                player.message("§aYou Received A Pay!");
+                player.message("§aYou redeemed the key and received the rewards!");
                 return; 
             }
         } catch(e) {}
@@ -183,7 +195,7 @@ function customGuiSlotClicked(event) {
     } catch(e) {}
 }
 
-// ---------- GUI CLOSED: persist ----------
+// ---------- GUI CLOSED ----------
 function customGuiClosed(event) {
     if (!lastNpc) return;
 
