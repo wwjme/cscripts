@@ -16,14 +16,13 @@ function makeNullArray(n){
 
 // ========== Layout ==========
 var slotPositions = [];
-var startX = -105;          // starting X for the first column
-var startY = -120;          // starting Y for the first row
-var rowSpacing = 20.5;        // vertical spacing between rows
-var colSpacing = 79;        // horizontal spacing between columns
-var numRows = 10;           // rows per column
-var numCols = 5;            // number of columns
+var startX = -105;          
+var startY = -120;          
+var rowSpacing = 20.5;      
+var colSpacing = 79;        
+var numRows = 10;           
+var numCols = 5;            
 
-// relative X offsets for slots in a row
 var price1OffsetX = 0;
 var price2OffsetX = 18;
 var boughtOffsetX = 44;
@@ -32,9 +31,9 @@ for (var col = 0; col < numCols; col++) {
     var colOffsetX = startX + col * colSpacing;
     for (var row = 0; row < numRows; row++) {
         var y = startY + row * rowSpacing;
-        slotPositions.push({x: colOffsetX + price1OffsetX, y: y});  // price slot 1
-        slotPositions.push({x: colOffsetX + price2OffsetX, y: y});  // price slot 2
-        slotPositions.push({x: colOffsetX + boughtOffsetX, y: y});  // bought item slot
+        slotPositions.push({x: colOffsetX + price1OffsetX, y: y});  
+        slotPositions.push({x: colOffsetX + price2OffsetX, y: y});  
+        slotPositions.push({x: colOffsetX + boughtOffsetX, y: y});  
     }
 }
 
@@ -46,12 +45,10 @@ function interact(event) {
     lastNpc = event.npc; 
     var npcData = lastNpc.getStoreddata();
 
-    // load all pages from storage
     storedSlotItems = npcData.has("SlotItems") 
         ? JSON.parse(npcData.get("SlotItems")) 
         : {};
 
-    // ensure current page exists
     if(!storedSlotItems[currentPage]){
         storedSlotItems[currentPage] = makeNullArray(slotPositions.length);
     }
@@ -59,32 +56,36 @@ function interact(event) {
     highlightedSlot = null;
     highlightLineIds = [];
 
-    guiRef = api.createCustomGui(176, 166, 0, true, player);
+    if(!guiRef){
+        guiRef = api.createCustomGui(176, 166, 0, true, player);
 
-    var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
-    
-    // ===== Buttons =====
-    guiRef.addButton(2,"Next",  284, -30, 35, 19);
-    guiRef.addButton(3,"Back",  -153, -30,  35, 19);
+        guiRef.addButton(2,"Next",  284, -30, 35, 19);
+        guiRef.addButton(3,"Back",  -153, -30,  35, 19);
 
-    if(adminMode){
-        guiRef.addButton(4,"Create", 284, -60, 35, 19);
+        var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
+        if(adminMode){
+            guiRef.addButton(4,"Create", 284, -60, 35, 19);
+        }
+
+        mySlots = slotPositions.map(function(pos) {
+            return guiRef.addItemSlot(pos.x, pos.y);
+        });
+
+        guiRef.showPlayerInventory(0, 91, false); 
+        player.showCustomGui(guiRef);
     }
 
-    // Add all slots for current page
-    mySlots = slotPositions.map(function(pos, i) {
-        var slot = guiRef.addItemSlot(pos.x, pos.y);
-
+    for(var i=0; i<mySlots.length; i++){
+        mySlots[i].setStack(null);
         if(storedSlotItems[currentPage][i]) {
             try {
-                slot.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[currentPage][i])));
+                var item = player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[currentPage][i]));
+                mySlots[i].setStack(item);
             } catch(e) {}
         }
-        return slot;
-    });
+    }
 
-    guiRef.showPlayerInventory(0, 91, false); 
-    player.showCustomGui(guiRef);
+    guiRef.update();
 }
 
 // ========== Button Click ==========
@@ -93,12 +94,10 @@ function customGuiButton(event){
     var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
     var npcData = lastNpc.getStoreddata();
 
-    // get total pages created so far
     var totalPages = Object.keys(storedSlotItems).length;
 
     if(event.buttonId == 2){ // Next
         savePageItems();
-
         if(currentPage+1 < totalPages){ 
             currentPage++;
             interact({player: player, API: event.API, npc: lastNpc});
@@ -143,7 +142,6 @@ function customGuiSlotClicked(event) {
     var slotIndex = mySlots.indexOf(clickedSlot);
 
     if(adminMode) {
-        // ===== Admin Mode: normal editing =====
         if(slotIndex !== -1) {
             highlightedSlot = clickedSlot;
             for(var i=0;i<highlightLineIds.length;i++){
@@ -199,15 +197,13 @@ function customGuiSlotClicked(event) {
             guiRef.update();
         } catch(e) {}
     } else {
-        // ===== Buyer Mode: right slot of any row =====
-        if(slotIndex % 3 !== 2) return; // only bought item slots
+        if(slotIndex % 3 !== 2) return; 
 
-        var rowStart = slotIndex - 2; // first slot index in this row
+        var rowStart = slotIndex - 2; 
         var priceSlots = [mySlots[rowStart], mySlots[rowStart+1]];
         var boughtItem = mySlots[slotIndex].getStack();
         if(!boughtItem || boughtItem.isEmpty()) return;
 
-        // Check if player has enough items
         for(var i=0;i<priceSlots.length;i++){
             var priceStack = priceSlots[i].getStack();
             if(priceStack && !priceStack.isEmpty()) {
@@ -226,7 +222,6 @@ function customGuiSlotClicked(event) {
             }
         }
 
-        // Remove price items
         for(var i=0;i<priceSlots.length;i++){
             var priceStack = priceSlots[i].getStack();
             if(priceStack && !priceStack.isEmpty()) {
@@ -242,7 +237,6 @@ function customGuiSlotClicked(event) {
             }
         }
 
-        // Give bought item
         var giveCopy = player.world.createItemFromNbt(boughtItem.getItemNbt());
         player.giveItem(giveCopy);
         player.message("§aPurchase successful!");
@@ -252,9 +246,9 @@ function customGuiSlotClicked(event) {
 // ========== Save GUI ==========
 function customGuiClosed(event) {
     savePageItems();
+    guiRef = null; // <<< reset so next interact() will recreate it
 }
 
-// helper: save current page slots
 function savePageItems(){
     if(!lastNpc) return;
     var npcData = lastNpc.getStoreddata();
