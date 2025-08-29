@@ -16,10 +16,10 @@ function makeNullArray(n){
 
 // ========== Layout ==========
 var slotPositions = [];
-var startX = -110;          // starting X for the first column
+var startX = -107;          // starting X for the first column
 var startY = -120;          // starting Y for the first row
 var rowSpacing = 20;        // vertical spacing between rows
-var colSpacing = 80;        // horizontal spacing between columns
+var colSpacing = 79;        // horizontal spacing between columns
 var numRows = 10;           // rows per column
 var numCols = 5;            // number of columns
 
@@ -65,11 +65,11 @@ function interact(event) {
     var Texture1 = "minecraft:textures/gui/demo_background.png";
 
     // ===== Buttons =====
-    guiRef.addTexturedButton(2,"Next Page",  270, -95, 50, 20, Texture1);
-    guiRef.addTexturedButton(3,"Prev Page",  270, -70,  50, 20, Texture1);
+    guiRef.addButton(2,"Next",  284, -30, 35, 19);
+    guiRef.addButton(3,"Back",  -154, -30,  35, 19);
 
     if(adminMode){
-        guiRef.addTexturedButton(4,"Create Page", 270, -120, 50, 20, Texture1);
+        guiRef.addButton(4,"Create", 284, -60, 35, 19);
     }
 
     // Add all slots for current page
