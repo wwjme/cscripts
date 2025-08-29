@@ -8,15 +8,20 @@ var storedSlotItems = [];
 // ========== Layout ==========
 var slotPositions = [];
 var startX = -100;      // starting X for the first price slot
-var startY = -110;     // starting Y for the first row
-var rowSpacing = 20;  // vertical spacing between rows
-var numRows = 8;      // total number of buyable rows
+var startY = -110;      // starting Y for the first row
+var rowSpacing = 20;    // vertical spacing between rows
+var numRows = 8;        // total number of buyable rows
+
+// relative X offsets for slots in a row
+var price1OffsetX = 0;    // first price slot relative to startX
+var price2OffsetX = 18;   // second price slot relative to first
+var boughtOffsetX = 45;   // bought item slot relative to first
 
 for (var row = 0; row < numRows; row++) {
     var y = startY + row * rowSpacing;
-    slotPositions.push({x: 10, y: y});  // price slot 1
-    slotPositions.push({x: 28, y: y});  // price slot 2
-    slotPositions.push({x: 55, y: y});  // bought item slot
+    slotPositions.push({x: startX + price1OffsetX, y: y});  // price slot 1
+    slotPositions.push({x: startX + price2OffsetX, y: y});  // price slot 2
+    slotPositions.push({x: startX + boughtOffsetX, y: y});  // bought item slot
 }
 
 // ========== Open GUI ==========
@@ -27,7 +32,6 @@ function interact(event) {
     lastNpc = event.npc; 
     var npcData = lastNpc.getStoreddata();
 
-    // Fill storedSlotItems with null if first time
     storedSlotItems = npcData.has("SlotItems") 
         ? JSON.parse(npcData.get("SlotItems")) 
         : Array(slotPositions.length).fill(null);
@@ -37,7 +41,6 @@ function interact(event) {
 
     guiRef = api.createCustomGui(176, 166, 0, true, player);
 
-    // Add all slots
     mySlots = slotPositions.map(function(pos, i) {
         var slot = guiRef.addItemSlot(pos.x, pos.y);
 
