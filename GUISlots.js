@@ -17,48 +17,28 @@ function interact(event) {
     lastNpc = event.npc; 
     var npcData = lastNpc.getStoreddata();
 
-    // Load stored items from NPC storeddata
-    if(npcData.has("SlotItems")) {
-        try {
-            storedSlotItems = JSON.parse(npcData.get("SlotItems"));
-        } catch(e) {
-            storedSlotItems = [];
-        }
-    } else {
-        storedSlotItems = [null, null, null];
-    }
+    storedSlotItems = npcData.has("SlotItems") 
+        ? JSON.parse(npcData.get("SlotItems")) 
+        : [null, null, null];
 
     highlightedSlot = null;
     highlightLineIds = [];
 
     guiRef = api.createCustomGui(176, 166, 0, true, player);
 
-    mySlots = [];
-    for (var i = 0; i < 3; i++) {
-        var pos = slotPositions[i];
+    mySlots = slotPositions.map(function(pos, i) {
         var slot = guiRef.addItemSlot(pos.x, pos.y);
-        mySlots.push(slot);
 
-        // Restore stored item into slot using stringToNbt
         if(storedSlotItems[i]) {
             try {
-                var nbt = api.stringToNbt(storedSlotItems[i]);
-                var item = player.world.createItemFromNbt(nbt);
-                slot.setStack(item);
+                slot.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[i])));
             } catch(e) {}
         }
-    }
+        return slot;
+    });
 
     guiRef.showPlayerInventory(10, 50, false);
     player.showCustomGui(guiRef);
-
-    // Print last stored item NBT
-    for(var i = storedSlotItems.length-1; i >= 0; i--) {
-        if(storedSlotItems[i]) {
-            player.message("Last item stored NBT: " + storedSlotItems[i]);
-            break;
-        }
-    }
 }
 
 function customGuiSlotClicked(event) {
@@ -66,109 +46,69 @@ function customGuiSlotClicked(event) {
     var stack = event.stack;
     var player = event.player;
 
-    var slotFound = false;
-    for (var i = 0; i < mySlots.length; i++) {
-        if (clickedSlot === mySlots[i]) {
-            slotFound = true;
-            highlightedSlot = clickedSlot;
+    var slotIndex = mySlots.indexOf(clickedSlot);
+    if(slotIndex !== -1) {
+        highlightedSlot = clickedSlot;
+        highlightLineIds.forEach(function(id) { try { guiRef.removeComponent(id); } catch(e) {} });
+        highlightLineIds = [];
 
-            if (highlightLineIds.length > 0) {
-                for (var j = 0; j < highlightLineIds.length; j++) {
-                    try { guiRef.removeComponent(highlightLineIds[j]); } catch(e) {}
-                }
-                highlightLineIds = [];
-            }
-
-            var pos = slotPositions[i];
-            var x = pos.x;
-            var y = pos.y;
-            var width = 18;
-            var height = 18;
-            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xADD8E6, 2));
-            highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xADD8E6, 2));
-            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xADD8E6, 2));
-            highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xADD8E6, 2));
-            guiRef.update();
-            break;
-        }
+        var pos = slotPositions[slotIndex];
+        var x = pos.x, y = pos.y, w = 18, h = 18;
+        highlightLineIds.push(guiRef.addColoredLine(1, x, y, x+w, y, 0xADD8E6, 2));
+        highlightLineIds.push(guiRef.addColoredLine(2, x, y+h, x+w, y+h, 0xADD8E6, 2));
+        highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y+h, 0xADD8E6, 2));
+        highlightLineIds.push(guiRef.addColoredLine(4, x+w, y, x+w, y+h, 0xADD8E6, 2));
+        guiRef.update();
+        return;
     }
 
-    // Inventory item clicked + slot highlighted
-    if (!slotFound && highlightedSlot != null && stack != null && !stack.isEmpty()) {
-        try {
-            var slotStack = highlightedSlot.getStack();
-            var maxStack = stack.getMaxStackSize();
+    if(!highlightedSlot) return;
 
-            if (slotStack != null && !slotStack.isEmpty() &&
-                slotStack.getDisplayName() === stack.getDisplayName()) {
+    try {
+        var slotStack = highlightedSlot.getStack();
+        var maxStack = stack ? stack.getMaxStackSize() : 64;
 
-                // SAME ITEM: check if slot is full
-                if (slotStack.getStackSize() >= maxStack) {
-                    highlightedSlot.setStack(stack);
+        if(stack && !stack.isEmpty()) {
+            if(slotStack && !slotStack.isEmpty() && slotStack.getDisplayName() === stack.getDisplayName()) {
+                var total = slotStack.getStackSize() + stack.getStackSize();
+                if(total <= maxStack) {
+                    slotStack.setStackSize(total);
+                    highlightedSlot.setStack(slotStack);
                     player.removeItem(stack, stack.getStackSize());
-                    player.giveItem(slotStack);
-                    player.message("Slot full! Swapped with your held item.");
                 } else {
-                    var totalAmount = slotStack.getStackSize() + stack.getStackSize();
-                    if (totalAmount <= maxStack) {
-                        slotStack.setStackSize(totalAmount);
-                        highlightedSlot.setStack(slotStack);
-                        player.removeItem(stack, stack.getStackSize());
-                        player.message("Stacked " + stack.getDisplayName() + " fully!");
-                    } else {
-                        var overflow = totalAmount - maxStack;
-                        slotStack.setStackSize(maxStack);
-                        highlightedSlot.setStack(slotStack);
+                    var overflow = total - maxStack;
+                    slotStack.setStackSize(maxStack);
+                    highlightedSlot.setStack(slotStack);
 
-                        var overflowCopy = player.world.createItemFromNbt(stack.getItemNbt());
-                        overflowCopy.setStackSize(overflow);
-
-                        player.removeItem(stack, stack.getStackSize());
-                        player.giveItem(overflowCopy);
-                        player.message("Stacked " + (stack.getStackSize() - overflow) + " items. Overflow returned!");
-                    }
+                    var overflowCopy = player.world.createItemFromNbt(stack.getItemNbt());
+                    overflowCopy.setStackSize(overflow);
+                    player.removeItem(stack, stack.getStackSize());
+                    player.giveItem(overflowCopy);
                 }
-
             } else {
                 var itemCopy = player.world.createItemFromNbt(stack.getItemNbt());
-                var oldSlotItem = slotStack;
+                if(slotStack && !slotStack.isEmpty()) player.giveItem(slotStack);
                 highlightedSlot.setStack(itemCopy);
-
-                if (oldSlotItem != null && !oldSlotItem.isEmpty()) {
-                    player.giveItem(oldSlotItem);
-                }
-
                 player.removeItem(stack, stack.getStackSize());
-                player.message("Transferred " + stack.getDisplayName() + " to highlighted slot!");
             }
-
-            guiRef.update();
-        } catch(e) {
-            player.message("Failed to transfer item: " + e);
-        }
-    } else if (!slotFound && highlightedSlot != null && (stack == null || stack.isEmpty())) {
-        var oldSlotItem = highlightedSlot.getStack();
-        if (oldSlotItem != null && !oldSlotItem.isEmpty()) {
-            player.giveItem(oldSlotItem);
+        } else if(slotStack && !slotStack.isEmpty()) {
+            player.giveItem(slotStack);
             highlightedSlot.setStack(player.world.createItem("minecraft:air", 1));
             guiRef.update();
-            player.message("Returned item to player from highlighted slot.");
         }
-    }
+
+        guiRef.update();
+    } catch(e) {}
 }
 
 function customGuiClosed(event) {
-    if (!lastNpc) return;
+    if(!lastNpc) return;
 
     var npcData = lastNpc.getStoreddata();
-    for(var i = 0; i < mySlots.length; i++) {
-        var stack = mySlots[i].getStack();
-        if(stack != null && !stack.isEmpty()) {
-            storedSlotItems[i] = stack.getItemNbt().toJsonString();
-        } else {
-            storedSlotItems[i] = null;
-        }
-    }
+    storedSlotItems = mySlots.map(function(slot) {
+        var stack = slot.getStack();
+        return stack && !stack.isEmpty() ? stack.getItemNbt().toJsonString() : null;
+    });
 
     npcData.put("SlotItems", JSON.stringify(storedSlotItems));
 }
