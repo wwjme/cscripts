@@ -63,9 +63,11 @@ function interact(event) {
     // --- If holding the key item -> give rewards (no GUI) ---
     if (handItem && !handItem.isEmpty() && storedSlotItems[GRID_SIZE]) {
         try {
-            var required = player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[GRID_SIZE]));
-            var matches = (handItem.getName() === required.getName()) &&
-                          (handItem.getItemDamage() === required.getItemDamage());
+            var requiredNbt = api.stringToNbt(storedSlotItems[GRID_SIZE]);
+            var handNbt = handItem.getItemNbt();
+
+            // Compare full NBT (ensures name, lore, enchants, etc. all match)
+            var matches = handNbt.toJsonString() === requiredNbt.toJsonString();
 
             if (matches) {
                 player.removeItem(handItem, 1);
@@ -80,7 +82,7 @@ function interact(event) {
                     }
                 }
 
-                player.message("§aYou redeemed the key and received the rewards!");
+                player.message("§aYou Received A Pay!");
                 return; 
             }
         } catch(e) {}
