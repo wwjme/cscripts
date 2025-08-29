@@ -3,7 +3,16 @@ var mySlots = [];
 var highlightLineIds = [];  
 var highlightedSlot = null; 
 var lastNpc = null;         
-var storedSlotItems = [];   
+var storedSlotItems = {};   // per-page storage
+var currentPage = 0;        // track current page
+var maxPages = 6;           // max pages admin can create
+
+// ---- helper: create an array of length n filled with null (since .fill isn't available) ----
+function makeNullArray(n){
+    var a = new Array(n);
+    for (var i = 0; i < n; i++){ a[i] = null; }
+    return a;
+}
 
 // ========== Layout ==========
 var slotPositions = [];
@@ -37,29 +46,39 @@ function interact(event) {
     lastNpc = event.npc; 
     var npcData = lastNpc.getStoreddata();
 
+    // load all pages from storage
     storedSlotItems = npcData.has("SlotItems") 
         ? JSON.parse(npcData.get("SlotItems")) 
-        : Array(slotPositions.length).fill(null);
+        : {};
+
+    // ensure current page exists
+    if(!storedSlotItems[currentPage]){
+        storedSlotItems[currentPage] = makeNullArray(slotPositions.length);
+    }
 
     highlightedSlot = null;
     highlightLineIds = [];
 
     guiRef = api.createCustomGui(176, 166, 0, true, player);
 
-    // ===== Admin button =====
     var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
+    var Texture1 = "minecraft:textures/gui/demo_background.png";
+
+    // ===== Buttons =====
+    guiRef.addTexturedButton(2,"Next Page",  270, -95, 50, 20, Texture1);
+    guiRef.addTexturedButton(3,"Prev Page",  270, -70,  50, 20, Texture1);
+
     if(adminMode){
-        var Texture1 = "minecraft:textures/gui/demo_background.png";
-        guiRef.addTexturedButton(2,"", 300, -120, 20, 20, Texture1);
+        guiRef.addTexturedButton(4,"Create Page", 270, -120, 50, 20, Texture1);
     }
 
-    // Add all slots
+    // Add all slots for current page
     mySlots = slotPositions.map(function(pos, i) {
         var slot = guiRef.addItemSlot(pos.x, pos.y);
 
-        if(storedSlotItems[i]) {
+        if(storedSlotItems[currentPage][i]) {
             try {
-                slot.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[i])));
+                slot.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[currentPage][i])));
             } catch(e) {}
         }
         return slot;
@@ -71,8 +90,47 @@ function interact(event) {
 
 // ========== Button Click ==========
 function customGuiButton(event){
-    if(event.buttonId == 2){
-        event.player.message("You pressed one of the buttons");
+    var player = event.player;
+    var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
+    var npcData = lastNpc.getStoreddata();
+
+    // get total pages created so far
+    var totalPages = Object.keys(storedSlotItems).length;
+
+    if(event.buttonId == 2){ // Next
+        savePageItems();
+
+        if(currentPage+1 < totalPages){ 
+            currentPage++;
+            interact({player: player, API: event.API, npc: lastNpc});
+            player.message("§eSwitched to page " + (currentPage+1));
+        } else {
+            player.message("§cNo more pages available!");
+        }
+    }
+
+    if(event.buttonId == 3){ // Previous
+        if(currentPage > 0){
+            savePageItems();
+            currentPage--;
+            interact({player: player, API: event.API, npc: lastNpc});
+            player.message("§eSwitched to page " + (currentPage+1));
+        } else {
+            player.message("§cAlready on first page!");
+        }
+    }
+
+    if(event.buttonId == 4 && adminMode){ // Create Page
+        if(totalPages < maxPages){
+            savePageItems();
+            var newPage = totalPages;
+            storedSlotItems[newPage] = makeNullArray(slotPositions.length);
+            currentPage = newPage;
+            interact({player: player, API: event.API, npc: lastNpc});
+            player.message("§aCreated page " + (currentPage+1));
+        } else {
+            player.message("§cMaximum of " + maxPages + " pages reached!");
+        }
     }
 }
 
@@ -194,10 +252,15 @@ function customGuiSlotClicked(event) {
 
 // ========== Save GUI ==========
 function customGuiClosed(event) {
-    if(!lastNpc) return;
+    savePageItems();
+}
 
+// helper: save current page slots
+function savePageItems(){
+    if(!lastNpc) return;
     var npcData = lastNpc.getStoreddata();
-    storedSlotItems = mySlots.map(function(slot) {
+
+    storedSlotItems[currentPage] = mySlots.map(function(slot) {
         var stack = slot.getStack();
         return stack && !stack.isEmpty() ? stack.getItemNbt().toJsonString() : null;
     });
