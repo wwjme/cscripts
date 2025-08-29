@@ -6,7 +6,7 @@ var cols = 9;
 var slotSize = 18;          // standard slot size
 var slotPadding = 0;        // remove extra space between slots
 var offsetX = 0;           // horizontal shift of the chest
-var offsetY = -40;           // vertical shift of the chest
+var offsetY = -40;          // vertical shift of the chest
 var highlightedSlot = null; 
 var lastNpc = null;         
 var storedSlotItems = [];   
@@ -18,9 +18,12 @@ function interact(event) {
     lastNpc = event.npc; 
     var npcData = lastNpc.getStoreddata();
 
-    storedSlotItems = npcData.has("SlotItems") 
-        ? JSON.parse(npcData.get("SlotItems")) 
-        : Array(rows * cols).fill(null);
+    if(npcData.has("SlotItems")) {
+        storedSlotItems = JSON.parse(npcData.get("SlotItems"));
+    } else {
+        storedSlotItems = [];
+        for(var i = 0; i < rows * cols; i++) storedSlotItems.push(null);
+    }
 
     highlightedSlot = null;
     highlightLineIds = [];
@@ -57,7 +60,9 @@ function customGuiSlotClicked(event) {
     var slotIndex = mySlots.indexOf(clickedSlot);
     if(slotIndex !== -1) {
         highlightedSlot = clickedSlot;
-        highlightLineIds.forEach(function(id) { try { guiRef.removeComponent(id); } catch(e) {} });
+        for(var i=0;i<highlightLineIds.length;i++){
+            try { guiRef.removeComponent(highlightLineIds[i]); } catch(e) {}
+        }
         highlightLineIds = [];
 
         var row = Math.floor(slotIndex / cols);
@@ -116,10 +121,11 @@ function customGuiClosed(event) {
     if(!lastNpc) return;
 
     var npcData = lastNpc.getStoreddata();
-    storedSlotItems = mySlots.map(function(slot) {
-        var stack = slot.getStack();
-        return stack && !stack.isEmpty() ? stack.getItemNbt().toJsonString() : null;
-    });
+    storedSlotItems = [];
+    for(var i=0; i<mySlots.length; i++){
+        var stack = mySlots[i].getStack();
+        storedSlotItems.push(stack && !stack.isEmpty() ? stack.getItemNbt().toJsonString() : null);
+    }
 
     npcData.put("SlotItems", JSON.stringify(storedSlotItems));
 }
