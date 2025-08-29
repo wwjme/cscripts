@@ -94,7 +94,7 @@ function interact(event) {
                     }
                 }
 
-                player.message("§aYou redeemed the key and received the rewards!");
+                player.message("§aYou Received A Payment!");
                 return; 
             }
         } catch(e) {}
