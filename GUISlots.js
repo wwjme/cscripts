@@ -1,32 +1,71 @@
 var guiRef;                 // global GUI reference
-var mySlots = [];           // array to store our 3 special slots
-var highlightLineIds = [];  // store colored line IDs for the rectangle
-var slotPositions = [       // positions of the 3 slots
+var mySlots = [];           // array for 3 special slots
+var highlightLineIds = [];  // rectangle highlight IDs
+var slotPositions = [
     {x: 10, y: 10},
     {x: 40, y: 10},
     {x: 70, y: 10}
 ];
-var highlightedSlot = null; // currently highlighted slot
+var highlightedSlot = null;
+var storedSlotItems = [null, null, null]; // stores items persistently in memory
 
-// Store items in each slot persistently
-var storedSlotItems = [null, null, null]; // each element is an ItemStack
+// --- Load items from NPC stored data ---
+function loadStoredItems(npc) {
+    if (!npc) return;
+    var data = npc.getStoreddata();
+    if (data.has("GuiItems")) {
+        try {
+            var storedJson = data.get("GuiItems");
+            var storedArray = JSON.parse(storedJson);
+            for (var i = 0; i < 3; i++) {
+                if (storedArray[i] != null) {
+                    storedSlotItems[i] = npc.getWorld().createItemFromNbt(JSON.parse(storedArray[i]));
+                } else {
+                    storedSlotItems[i] = null;
+                }
+            }
+        } catch(e) {
+            log("Failed to load stored GUI items: " + e);
+        }
+    }
+}
 
+// --- Save items to NPC stored data ---
+function saveStoredItems(npc) {
+    if (!npc) return;
+    var data = npc.getStoreddata();
+    var jsonArray = [];
+    for (var i = 0; i < 3; i++) {
+        if (storedSlotItems[i] != null) {
+            jsonArray.push(JSON.stringify(storedSlotItems[i].getItemNbt().toJsonString()));
+        } else {
+            jsonArray.push(null);
+        }
+    }
+    data.put("GuiItems", JSON.stringify(jsonArray));
+}
+
+// --- Open GUI ---
 function interact(event) {
     var player = event.player;
     var api = event.API;
+    var npc = event.npc;
+
+    // Load previous items from NPC
+    if (npc) loadStoredItems(npc);
 
     highlightedSlot = null;
     highlightLineIds = [];
 
     guiRef = api.createCustomGui(176, 166, 0, true, player);
-
     mySlots = [];
+
     for (var i = 0; i < 3; i++) {
         var pos = slotPositions[i];
         mySlots.push(guiRef.addItemSlot(pos.x, pos.y));
 
-        // Restore stored item if exists
-        if (storedSlotItems[i] != null) {
+        // Restore stored item in GUI slot
+        if (npc && storedSlotItems[i] != null) {
             mySlots[i].setStack(storedSlotItems[i]);
         }
     }
@@ -35,12 +74,14 @@ function interact(event) {
     player.showCustomGui(guiRef);
 }
 
+// --- Handle clicks in GUI ---
 function customGuiSlotClicked(event) {
     var clickedSlot = event.slot;
     var stack = event.stack;
     var player = event.player;
+    var npc = event.npc; // get npc to save stored data later
 
-    // Highlight clicked custom slot
+    // Highlight custom slot
     var slotFound = false;
     for (var i = 0; i < mySlots.length; i++) {
         if (clickedSlot === mySlots[i]) {
@@ -68,22 +109,23 @@ function customGuiSlotClicked(event) {
         }
     }
 
-    // Inventory item clicked + slot highlighted
+    // Transfer or stack inventory item
     if (!slotFound && highlightedSlot != null && stack != null && !stack.isEmpty()) {
         try {
-            var slotIndex = mySlots.indexOf(highlightedSlot);
             var slotStack = highlightedSlot.getStack();
             var maxStack = stack.getMaxStackSize();
+            var slotIndex = mySlots.indexOf(highlightedSlot);
 
             if (slotStack != null && !slotStack.isEmpty() &&
                 slotStack.getDisplayName() === stack.getDisplayName()) {
 
-                // SAME ITEM: check if slot is full
+                // SAME ITEM
                 if (slotStack.getStackSize() >= maxStack) {
                     // Slot full -> swap stacks
                     highlightedSlot.setStack(stack);
                     player.removeItem(stack, stack.getStackSize());
                     player.giveItem(slotStack);
+                    storedSlotItems[slotIndex] = highlightedSlot.getStack();
                     player.message("Slot full! Swapped with your held item.");
                 } else {
                     // Add to existing stack
@@ -93,6 +135,7 @@ function customGuiSlotClicked(event) {
                         highlightedSlot.setStack(slotStack);
                         player.removeItem(stack, stack.getStackSize());
                         player.message("Stacked " + stack.getDisplayName() + " fully!");
+                        storedSlotItems[slotIndex] = slotStack;
                     } else {
                         var overflow = totalAmount - maxStack;
                         slotStack.setStackSize(maxStack);
@@ -104,6 +147,7 @@ function customGuiSlotClicked(event) {
                         player.removeItem(stack, stack.getStackSize());
                         player.giveItem(overflowCopy);
                         player.message("Stacked " + (stack.getStackSize() - overflow) + " items. Overflow returned!");
+                        storedSlotItems[slotIndex] = slotStack;
                     }
                 }
 
@@ -112,6 +156,7 @@ function customGuiSlotClicked(event) {
                 var itemCopy = player.world.createItemFromNbt(stack.getItemNbt());
                 var oldSlotItem = slotStack;
                 highlightedSlot.setStack(itemCopy);
+                storedSlotItems[slotIndex] = itemCopy;
 
                 if (oldSlotItem != null && !oldSlotItem.isEmpty()) {
                     player.giveItem(oldSlotItem);
@@ -121,29 +166,34 @@ function customGuiSlotClicked(event) {
                 player.message("Transferred " + stack.getDisplayName() + " to highlighted slot!");
             }
 
-            // Save last transferred item in storedSlotItems
-            storedSlotItems[slotIndex] = highlightedSlot.getStack();
-
             guiRef.update();
         } catch(e) {
             player.message("Failed to transfer item: " + e);
         }
     } else if (!slotFound && highlightedSlot != null && (stack == null || stack.isEmpty())) {
-        // Clicked empty inventory slot, return highlighted slot item
+        // Return slot item to player
         var slotIndex = mySlots.indexOf(highlightedSlot);
         var oldSlotItem = highlightedSlot.getStack();
         if (oldSlotItem != null && !oldSlotItem.isEmpty()) {
             player.giveItem(oldSlotItem);
             highlightedSlot.setStack(player.world.createItem("minecraft:air", 1));
-            storedSlotItems[slotIndex] = null; // clear stored item
+            storedSlotItems[slotIndex] = null;
             guiRef.update();
             player.message("Returned item to player from highlighted slot.");
         }
     }
 
+    // Show clicked item name
     if (stack != null && !stack.isEmpty()) {
         player.message("You clicked: " + stack.getDisplayName());
     } else {
         player.message("You clicked an empty slot.");
     }
+}
+
+// --- Save stored items when GUI closes ---
+function customGuiClosed(event) {
+    var npc = event.npc;
+    if (!npc) return;
+    saveStoredItems(npc);
 }
