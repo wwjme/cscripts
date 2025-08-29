@@ -1,47 +1,51 @@
 var guiRef;                 
 var mySlots = [];           
 var highlightLineIds = [];  
-var slotPositions = [];     
+var rows = 3;
+var cols = 9;
+var slotSize = 18;          // standard slot size
+var slotPadding = 0;        // remove extra space between slots
+var offsetX = 0;           // horizontal shift of the chest
+var offsetY = -30;           // vertical shift of the chest
 var highlightedSlot = null; 
-
-// GUI offsets
-var guiOffsetX = -10; // move GUI right
-var guiOffsetY = 90; // move GUI up
-
-// Generate 36 slot positions in 4 rows × 9 columns
-(function generateSlotPositions() {
-    var rows = 4;
-    var cols = 9;
-    var startX = 10 + guiOffsetX;
-    var startY = 10 - guiOffsetY;
-    var spacingX = 18;  
-    var spacingY = 18;  
-    for (var r = 0; r < rows; r++) {
-        for (var c = 0; c < cols; c++) {
-            slotPositions.push({
-                x: startX + c * spacingX,
-                y: startY + r * spacingY
-            });
-        }
-    }
-})();
+var lastNpc = null;         
+var storedSlotItems = [];   
 
 function interact(event) {
     var player = event.player;
     var api = event.API;
 
+    lastNpc = event.npc; 
+    var npcData = lastNpc.getStoreddata();
+
+    storedSlotItems = npcData.has("SlotItems") 
+        ? JSON.parse(npcData.get("SlotItems")) 
+        : Array(rows * cols).fill(null);
+
     highlightedSlot = null;
     highlightLineIds = [];
 
-    guiRef = api.createCustomGui(176, 160, 0, true, player);
+    guiRef = api.createCustomGui(176, 166, 0, true, player);
 
     mySlots = [];
-    for (var i = 0; i < slotPositions.length; i++) {
-        var pos = slotPositions[i];
-        mySlots.push(guiRef.addItemSlot(pos.x, pos.y));
+    for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < cols; c++) {
+            var x = offsetX + c * (slotSize + slotPadding);
+            var y = offsetY + r * (slotSize + slotPadding);
+            var slot = guiRef.addItemSlot(x, y);
+            var index = r * cols + c;
+
+            if(storedSlotItems[index]) {
+                try {
+                    slot.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[index])));
+                } catch(e) {}
+            }
+
+            mySlots.push(slot);
+        }
     }
 
-    guiRef.showPlayerInventory(10 + guiOffsetX, 120 - guiOffsetY, false); 
+    guiRef.showPlayerInventory(offsetX, offsetY + rows * slotSize + 5, false); // inventory below the chest
     player.showCustomGui(guiRef);
 }
 
@@ -50,55 +54,72 @@ function customGuiSlotClicked(event) {
     var stack = event.stack;
     var player = event.player;
 
-    var slotFound = false;
-    for (var i = 0; i < mySlots.length; i++) {
-        if (clickedSlot === mySlots[i]) {
-            slotFound = true;
-            highlightedSlot = clickedSlot;
+    var slotIndex = mySlots.indexOf(clickedSlot);
+    if(slotIndex !== -1) {
+        highlightedSlot = clickedSlot;
+        highlightLineIds.forEach(function(id) { try { guiRef.removeComponent(id); } catch(e) {} });
+        highlightLineIds = [];
 
-            if (highlightLineIds.length > 0) {
-                for (var j = 0; j < highlightLineIds.length; j++) {
-                    try { guiRef.removeComponent(highlightLineIds[j]); } catch(e) {}
-                }
-                highlightLineIds = [];
-            }
-
-            var pos = slotPositions[i];
-            var x = pos.x - 1;
-            var y = pos.y - 1;
-            var width = 18;
-            var height = 18;
-            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x + width, y, 0xADD8E6, 2));
-            highlightLineIds.push(guiRef.addColoredLine(2, x, y + height, x + width, y + height, 0xADD8E6, 2));
-            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y + height, 0xADD8E6, 2));
-            highlightLineIds.push(guiRef.addColoredLine(4, x + width, y, x + width, y + height, 0xADD8E6, 2));
-            guiRef.update();
-            break;
-        }
+        var row = Math.floor(slotIndex / cols);
+        var col = slotIndex % cols;
+        var x = offsetX + col * (slotSize + slotPadding);
+        var y = offsetY + row * (slotSize + slotPadding);
+        var w = slotSize, h = slotSize;
+        highlightLineIds.push(guiRef.addColoredLine(1, x, y, x+w, y, 0xADD8E6, 2));
+        highlightLineIds.push(guiRef.addColoredLine(2, x, y+h, x+w, y+h, 0xADD8E6, 2));
+        highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y+h, 0xADD8E6, 2));
+        highlightLineIds.push(guiRef.addColoredLine(4, x+w, y, x+w, y+h, 0xADD8E6, 2));
+        guiRef.update();
+        return;
     }
 
-    if (!slotFound && highlightedSlot != null) {
-        if (stack != null && !stack.isEmpty()) {
-            try {
+    if(!highlightedSlot) return;
+
+    try {
+        var slotStack = highlightedSlot.getStack();
+        var maxStack = stack ? stack.getMaxStackSize() : 64;
+
+        if(stack && !stack.isEmpty()) {
+            if(slotStack && !slotStack.isEmpty() && slotStack.getDisplayName() === stack.getDisplayName()) {
+                var total = slotStack.getStackSize() + stack.getStackSize();
+                if(total <= maxStack) {
+                    slotStack.setStackSize(total);
+                    highlightedSlot.setStack(slotStack);
+                    player.removeItem(stack, stack.getStackSize());
+                } else {
+                    var overflow = total - maxStack;
+                    slotStack.setStackSize(maxStack);
+                    highlightedSlot.setStack(slotStack);
+
+                    var overflowCopy = player.world.createItemFromNbt(stack.getItemNbt());
+                    overflowCopy.setStackSize(overflow);
+                    player.removeItem(stack, stack.getStackSize());
+                    player.giveItem(overflowCopy);
+                }
+            } else {
                 var itemCopy = player.world.createItemFromNbt(stack.getItemNbt());
-                var oldSlotItem = highlightedSlot.getStack();
+                if(slotStack && !slotStack.isEmpty()) player.giveItem(slotStack);
                 highlightedSlot.setStack(itemCopy);
-
-                if (oldSlotItem != null && !oldSlotItem.isEmpty()) {
-                    player.giveItem(oldSlotItem);
-                }
-
                 player.removeItem(stack, stack.getStackSize());
-                guiRef.update();
-            } catch(e) {}
-        } else {
-            var oldSlotItem = highlightedSlot.getStack();
-            if (oldSlotItem != null && !oldSlotItem.isEmpty()) {
-                player.giveItem(oldSlotItem);
-                highlightedSlot.setStack(player.world.createItem("minecraft:air", 1));
-                guiRef.update();
             }
+        } else if(slotStack && !slotStack.isEmpty()) {
+            player.giveItem(slotStack);
+            highlightedSlot.setStack(player.world.createItem("minecraft:air", 1));
+            guiRef.update();
         }
-    }
+
+        guiRef.update();
+    } catch(e) {}
 }
 
+function customGuiClosed(event) {
+    if(!lastNpc) return;
+
+    var npcData = lastNpc.getStoreddata();
+    storedSlotItems = mySlots.map(function(slot) {
+        var stack = slot.getStack();
+        return stack && !stack.isEmpty() ? stack.getItemNbt().toJsonString() : null;
+    });
+
+    npcData.put("SlotItems", JSON.stringify(storedSlotItems));
+}
