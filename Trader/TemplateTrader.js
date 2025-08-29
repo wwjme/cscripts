@@ -16,9 +16,9 @@ function makeNullArray(n){
 
 // ========== Layout ==========
 var slotPositions = [];
-var startX = -107;          // starting X for the first column
+var startX = -105;          // starting X for the first column
 var startY = -120;          // starting Y for the first row
-var rowSpacing = 20;        // vertical spacing between rows
+var rowSpacing = 20.5;        // vertical spacing between rows
 var colSpacing = 79;        // horizontal spacing between columns
 var numRows = 10;           // rows per column
 var numCols = 5;            // number of columns
@@ -26,7 +26,7 @@ var numCols = 5;            // number of columns
 // relative X offsets for slots in a row
 var price1OffsetX = 0;
 var price2OffsetX = 18;
-var boughtOffsetX = 46;
+var boughtOffsetX = 44;
 
 for (var col = 0; col < numCols; col++) {
     var colOffsetX = startX + col * colSpacing;
@@ -62,11 +62,10 @@ function interact(event) {
     guiRef = api.createCustomGui(176, 166, 0, true, player);
 
     var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
-    var Texture1 = "minecraft:textures/gui/demo_background.png";
-
+    
     // ===== Buttons =====
     guiRef.addButton(2,"Next",  284, -30, 35, 19);
-    guiRef.addButton(3,"Back",  -154, -30,  35, 19);
+    guiRef.addButton(3,"Back",  -153, -30,  35, 19);
 
     if(adminMode){
         guiRef.addButton(4,"Create", 284, -60, 35, 19);
@@ -84,7 +83,7 @@ function interact(event) {
         return slot;
     });
 
-    guiRef.showPlayerInventory(0, 90, false); 
+    guiRef.showPlayerInventory(0, 91, false); 
     player.showCustomGui(guiRef);
 }
 
