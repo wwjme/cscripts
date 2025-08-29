@@ -8,6 +8,9 @@ var slotPositions = [       // positions of the 3 slots
 ];
 var highlightedSlot = null; // currently highlighted slot
 
+// Store items in each slot persistently
+var storedSlotItems = [null, null, null]; // each element is an ItemStack
+
 function interact(event) {
     var player = event.player;
     var api = event.API;
@@ -21,6 +24,11 @@ function interact(event) {
     for (var i = 0; i < 3; i++) {
         var pos = slotPositions[i];
         mySlots.push(guiRef.addItemSlot(pos.x, pos.y));
+
+        // Restore stored item if exists
+        if (storedSlotItems[i] != null) {
+            mySlots[i].setStack(storedSlotItems[i]);
+        }
     }
 
     guiRef.showPlayerInventory(10, 50, false);
@@ -63,6 +71,7 @@ function customGuiSlotClicked(event) {
     // Inventory item clicked + slot highlighted
     if (!slotFound && highlightedSlot != null && stack != null && !stack.isEmpty()) {
         try {
+            var slotIndex = mySlots.indexOf(highlightedSlot);
             var slotStack = highlightedSlot.getStack();
             var maxStack = stack.getMaxStackSize();
 
@@ -112,16 +121,21 @@ function customGuiSlotClicked(event) {
                 player.message("Transferred " + stack.getDisplayName() + " to highlighted slot!");
             }
 
+            // Save last transferred item in storedSlotItems
+            storedSlotItems[slotIndex] = highlightedSlot.getStack();
+
             guiRef.update();
         } catch(e) {
             player.message("Failed to transfer item: " + e);
         }
     } else if (!slotFound && highlightedSlot != null && (stack == null || stack.isEmpty())) {
         // Clicked empty inventory slot, return highlighted slot item
+        var slotIndex = mySlots.indexOf(highlightedSlot);
         var oldSlotItem = highlightedSlot.getStack();
         if (oldSlotItem != null && !oldSlotItem.isEmpty()) {
             player.giveItem(oldSlotItem);
             highlightedSlot.setStack(player.world.createItem("minecraft:air", 1));
+            storedSlotItems[slotIndex] = null; // clear stored item
             guiRef.update();
             player.message("Returned item to player from highlighted slot.");
         }
