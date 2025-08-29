@@ -7,21 +7,26 @@ var storedSlotItems = [];
 
 // ========== Layout ==========
 var slotPositions = [];
-var startX = -100;      // starting X for the first price slot
-var startY = -110;      // starting Y for the first row
-var rowSpacing = 20;    // vertical spacing between rows
-var numRows = 8;        // total number of buyable rows
+var startX = -110;          // starting X for the first column
+var startY = -120;        // starting Y for the first row
+var rowSpacing = 20;      // vertical spacing between rows
+var colSpacing = 80;      // horizontal spacing between columns
+var numRows = 10;          // rows per column
+var numCols = 5;          // number of columns
 
 // relative X offsets for slots in a row
-var price1OffsetX = 0;    // first price slot relative to startX
-var price2OffsetX = 18;   // second price slot relative to first
-var boughtOffsetX = 45;   // bought item slot relative to first
+var price1OffsetX = 0;
+var price2OffsetX = 18;
+var boughtOffsetX = 46;
 
-for (var row = 0; row < numRows; row++) {
-    var y = startY + row * rowSpacing;
-    slotPositions.push({x: startX + price1OffsetX, y: y});  // price slot 1
-    slotPositions.push({x: startX + price2OffsetX, y: y});  // price slot 2
-    slotPositions.push({x: startX + boughtOffsetX, y: y});  // bought item slot
+for (var col = 0; col < numCols; col++) {
+    var colOffsetX = startX + col * colSpacing;
+    for (var row = 0; row < numRows; row++) {
+        var y = startY + row * rowSpacing;
+        slotPositions.push({x: colOffsetX + price1OffsetX, y: y});  // price slot 1
+        slotPositions.push({x: colOffsetX + price2OffsetX, y: y});  // price slot 2
+        slotPositions.push({x: colOffsetX + boughtOffsetX, y: y});  // bought item slot
+    }
 }
 
 // ========== Open GUI ==========
@@ -52,7 +57,7 @@ function interact(event) {
         return slot;
     });
 
-    guiRef.showPlayerInventory(10, 50, false); 
+    guiRef.showPlayerInventory(0, 90, false); 
     player.showCustomGui(guiRef);
 }
 
