@@ -1,3 +1,4 @@
+//bug: when switching with another item in gui if theres the same item in storage then that item switched disappear
 var guiRef;                 
 var mySlots = [];           
 var highlightLineIds = [];  
