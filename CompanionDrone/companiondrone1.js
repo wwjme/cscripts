@@ -16,22 +16,34 @@ function isAliveEntity(e){
 // --- Init function ---
 function init(event){
     var npc = event.npc;
+    var pos = npc.getPos();
+
+    // Record spawn position once
+    if (!npc.storeddata.has("SpawnX")) {
+        npc.storeddata.put("SpawnX", pos.getX());
+        npc.storeddata.put("SpawnY", pos.getY());
+        npc.storeddata.put("SpawnZ", pos.getZ());
+        npc.storeddata.put("SpawnWorld", npc.getWorld().getName());
+    }
+
     if (npc.role == null) return;
     var owner = npc.role.getFollowing();
     if (owner == null){
         npc.storeddata.put("OwnerName", 0);
         npc.storeddata.put("OwnerUUID", 0);
-    }else{
+    } else {
         npc.storeddata.put("OwnerName", owner.getName());
         npc.storeddata.put("OwnerUUID", owner.getUUID());
     }
 }
 
+// --- Tick function ---
 function tick(event){
     var npc = event.npc;
     var world = npc.getWorld();
     if (npc.role == null) return;
     var owner = npc.role.getFollowing();
+
     if (owner == null){
         npc.storeddata.put("OwnerName", 0);
         npc.storeddata.put("OwnerUUID", 0);
@@ -52,7 +64,7 @@ function tick(event){
         curTarget = null;
     }
 
-    // --- Teleport if too far (switch nav type temporarily) ---
+    // --- Teleport checks ---
     try {
         var ownerPos = owner.getPos();
         var npcPos = npc.getPos();
@@ -61,12 +73,24 @@ function tick(event){
         var dz = npcPos.getZ() - ownerPos.getZ();
         var distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
 
-        if (distance > 40){
+        if (distance > 56){
+            // Teleport back to spawn location
+            var sx = npc.storeddata.get("SpawnX");
+            var sy = npc.storeddata.get("SpawnY");
+            var sz = npc.storeddata.get("SpawnZ");
+            var sWorld = npc.storeddata.get("SpawnWorld");
+
+            if (sWorld && sWorld === world.getName()){
+                npc.getAi().setNavigationType(0);
+                npc.setPos(world.getBlock(sx, sy, sz).getPos());
+                npc.getAi().setNavigationType(1);
+            }
+        } else if (distance > 40){
+            // Teleport to owner
             npc.getAi().setNavigationType(0);
             npc.setPos(owner.getPos());
             npc.getAi().setNavigationType(1);
         }
- 
     } catch(e){}
 
     // --- Owner attacked something -> assist ---
@@ -123,7 +147,3 @@ function tick(event){
         }
     }
 }
-
-
-
-
