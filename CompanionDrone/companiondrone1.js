@@ -1,6 +1,7 @@
 var RANGE = 100;
 var lastOwnerAttackTime = 0;
 var currentTargetId = null;
+var navResetDone = false; // tracks if navigationType switched back to 1 after owner returns
 
 // --- Helper functions ---
 function hasFunc(o, name){
@@ -34,6 +35,24 @@ function init(event){
     } else {
         npc.storeddata.put("OwnerName", owner.getName());
         npc.storeddata.put("OwnerUUID", owner.getUUID());
+    }
+}
+
+// --- Player interact function ---
+function interact(event){
+    var player = event.player;
+    var npc = event.npc;
+    var hand = player.getMainhandItem();
+    if (!hand || hand.isEmpty()) return;
+
+    if (hand.getName() === "minecraft:bedrock"){
+        var pos = npc.getPos();
+        npc.storeddata.put("SpawnX", pos.getX());
+        npc.storeddata.put("SpawnY", pos.getY());
+        npc.storeddata.put("SpawnZ", pos.getZ());
+        npc.storeddata.put("SpawnWorld", npc.getWorld().getName());
+
+        player.message("§aNPC spawn location updated to: X=" + pos.getX() + " Y=" + pos.getY() + " Z=" + pos.getZ());
     }
 }
 
@@ -83,13 +102,20 @@ function tick(event){
             if (sWorld && sWorld === world.getName()){
                 npc.getAi().setNavigationType(0);
                 npc.setPos(world.getBlock(sx, sy, sz).getPos());
-                npc.getAi().setNavigationType(1);
+                navResetDone = false; // reset flag so it can switch back when owner returns
             }
         } else if (distance > 40){
             // Teleport to owner
             npc.getAi().setNavigationType(0);
             npc.setPos(owner.getPos());
             npc.getAi().setNavigationType(1);
+            navResetDone = true; // nav already set for owner
+        } else {
+            // Owner is within 40 blocks
+            if (!navResetDone){
+                npc.getAi().setNavigationType(1);
+                navResetDone = true; // do this only once
+            }
         }
     } catch(e){}
 
