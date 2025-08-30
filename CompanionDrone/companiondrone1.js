@@ -2,6 +2,7 @@ var RANGE = 100;
 var lastOwnerAttackTime = 0;
 var currentTargetId = null;
 var navResetDone = false;
+var teleportedToSpawnNoOwner = false; // track teleport due to no owner
 
 // --- Helper functions ---
 function hasFunc(o, name){
@@ -89,12 +90,18 @@ function tick(event){
         npc.storeddata.put("OwnerUUID", 0);
         npc.setAttackTarget(null);
         currentTargetId = null;
-        if (sWorld === world.getName()){
+
+        if (!teleportedToSpawnNoOwner && sWorld === world.getName()){
             npc.getAi().setNavigationType(0);
             npc.setPos(world.getBlock(sx, sy, sz).getPos());
-            navResetDone = false;
+            teleportedToSpawnNoOwner = true; // only teleport once
+            npc.reset();
+            npc.getAi().setNavigationType(1);
         }
         return;
+    } else {
+        // reset the no-owner teleport flag when owner appears
+        teleportedToSpawnNoOwner = false;
     }
 
     // --- Update owner info ---
