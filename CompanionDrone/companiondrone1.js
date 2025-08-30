@@ -63,14 +63,28 @@ function tick(event){
     if (npc.role == null) return;
     var owner = npc.role.getFollowing();
 
+    var npcPos = npc.getPos();
+    var sx = npc.storeddata.get("SpawnX");
+    var sy = npc.storeddata.get("SpawnY");
+    var sz = npc.storeddata.get("SpawnZ");
+    var sWorld = npc.storeddata.get("SpawnWorld");
+
+    // --- No owner detected ---
     if (owner == null){
         npc.storeddata.put("OwnerName", 0);
         npc.storeddata.put("OwnerUUID", 0);
         npc.setAttackTarget(null);
         currentTargetId = null;
+
+        if (sWorld && sWorld === world.getName()){
+            npc.getAi().setNavigationType(0);
+            npc.setPos(world.getBlock(sx, sy, sz).getPos());
+            navResetDone = false; // reset flag so it can switch back when owner returns
+        }
         return;
     }
 
+    // --- Owner info update ---
     if (npc.storeddata.get("OwnerUUID") !== owner.getUUID()){
         npc.storeddata.put("OwnerName", owner.getName());
         npc.storeddata.put("OwnerUUID", owner.getUUID());
@@ -86,7 +100,6 @@ function tick(event){
     // --- Teleport checks ---
     try {
         var ownerPos = owner.getPos();
-        var npcPos = npc.getPos();
         var dx = npcPos.getX() - ownerPos.getX();
         var dy = npcPos.getY() - ownerPos.getY();
         var dz = npcPos.getZ() - ownerPos.getZ();
@@ -94,27 +107,22 @@ function tick(event){
 
         if (distance > 56){
             // Teleport back to spawn location
-            var sx = npc.storeddata.get("SpawnX");
-            var sy = npc.storeddata.get("SpawnY");
-            var sz = npc.storeddata.get("SpawnZ");
-            var sWorld = npc.storeddata.get("SpawnWorld");
-
             if (sWorld && sWorld === world.getName()){
                 npc.getAi().setNavigationType(0);
                 npc.setPos(world.getBlock(sx, sy, sz).getPos());
-                navResetDone = false; // reset flag so it can switch back when owner returns
+                navResetDone = false; // reset flag
             }
         } else if (distance > 40){
             // Teleport to owner
             npc.getAi().setNavigationType(0);
             npc.setPos(owner.getPos());
             npc.getAi().setNavigationType(1);
-            navResetDone = true; // nav already set for owner
+            navResetDone = true; 
         } else {
             // Owner is within 40 blocks
             if (!navResetDone){
                 npc.getAi().setNavigationType(1);
-                navResetDone = true; // do this only once
+                navResetDone = true; 
             }
         }
     } catch(e){}
