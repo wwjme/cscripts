@@ -4,6 +4,8 @@ var currentTargetId = null;
 var navResetDone = false;
 var teleportedToSpawnNoOwner = false; // track teleport due to no owner
 
+var health = 40;
+var strength = 5;
 // --- Helper functions ---
 function hasFunc(o, name){
     try { return o && typeof o[name] === "function"; } catch(e){ return false; }
@@ -41,7 +43,9 @@ function scanForThreats(npc, owner, world){
 function init(event){
     var npc = event.npc;
     var pos = npc.getPos();
-
+     npc.getStats().setMaxHealth(health);
+     npc.getStats().getRanged().setStrength(strength);
+     
     // Record spawn position once
     if (!npc.storeddata.has("SpawnX")) {
         npc.storeddata.put("SpawnX", pos.getX());
