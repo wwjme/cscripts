@@ -32,6 +32,10 @@ function makeNullArray(n){
     return a;
 }
 
+function init(e) {
+ e.npc.setFaction(4);
+}
+
 // Compare items strictly (id + damage + NBT)
 function itemsEqualStrict(api, hand, required) {
     if (!hand || !required) return false;
