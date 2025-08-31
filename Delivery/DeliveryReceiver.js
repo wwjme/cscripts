@@ -74,6 +74,7 @@ function interact(event) {
 
     var handItem = player.getMainhandItem();
 
+    var pdata = player.getStoreddata(); //canGetPackag data
     // --- If holding the key item -> give rewards ---
     if (handItem && !handItem.isEmpty() && storedSlotItems[GRID_SIZE]) {
         try {
@@ -83,7 +84,7 @@ function interact(event) {
 
             if (matches) {
                 player.removeItem(handItem, 1);
-
+                pdata.put("canGetPackage", 1); 
                 // Give all rewards
                 for (var i = 0; i < GRID_SIZE; i++) {
                     if (storedSlotItems[i]) {
