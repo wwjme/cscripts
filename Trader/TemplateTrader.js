@@ -298,7 +298,7 @@ function customGuiSlotClicked(event) {
                 }
             }
         }
-
+    }
         // Give reward
         var giveCopy = player.world.createItemFromNbt(boughtItem.getItemNbt());
         player.giveItem(giveCopy);
