@@ -3,12 +3,11 @@ var mySlots = [];
 var highlightLineIds = [];  
 var highlightedSlot = null; 
 var lastNpc = null;         
-var storedSlotItems = {};   // per-page slot storage
-var storedPageTexts = {};   // per-page text storage
-var currentPage = 0;        
-var maxPages = 6;           
+var storedSlotItems = {};   // per-page storage
+var currentPage = 0;        // track current page
+var maxPages = 6;           // max pages admin can create
 
-// ---- helper ----
+// ---- helper: create an array of length n filled with null (since .fill isn't available) ----
 function makeNullArray(n){
     var a = new Array(n);
     for (var i = 0; i < n; i++){ a[i] = null; }
@@ -50,21 +49,13 @@ function interact(event) {
         ? JSON.parse(npcData.get("SlotItems")) 
         : {};
 
-    storedPageTexts = npcData.has("PageTexts")
-        ? JSON.parse(npcData.get("PageTexts"))
-        : {};
-
     if(!storedSlotItems[currentPage]){
         storedSlotItems[currentPage] = makeNullArray(slotPositions.length);
-    }
-    if(!storedPageTexts[currentPage]){
-        storedPageTexts[currentPage] = "";
     }
 
     highlightedSlot = null;
     highlightLineIds = [];
 
-    // Only create GUI once
     if(!guiRef){
         guiRef = api.createCustomGui(176, 166, 0, true, player);
 
@@ -74,9 +65,6 @@ function interact(event) {
         var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
         if(adminMode){
             guiRef.addButton(4,"Create", 284, -60, 35, 19);
-            guiRef.addTextField(10, -80, -150, 160, 20);
-        } else {
-            guiRef.addLabel(11, "", -80, -150, 160, 20);
         }
 
         mySlots = slotPositions.map(function(pos) {
@@ -87,14 +75,6 @@ function interact(event) {
         player.showCustomGui(guiRef);
     }
 
-    updatePage(player, api);
-}
-
-// ========== Update Page ==========
-function updatePage(player, api){
-    if(!guiRef) return;
-
-    // Update slots
     for(var i=0; i<mySlots.length; i++){
         mySlots[i].setStack(null);
         if(storedSlotItems[currentPage][i]) {
@@ -105,19 +85,7 @@ function updatePage(player, api){
         }
     }
 
-    // Update text field / label
-    try {
-        var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
-        if(adminMode){
-            var tf = guiRef.getComponent(10);
-            if(tf) tf.setText(storedPageTexts[currentPage] || "");
-        } else {
-            var lbl = guiRef.getComponent(11);
-            if(lbl) lbl.setText(storedPageTexts[currentPage] || "");
-        }
-    } catch(e){}
-
-    try { guiRef.update(); } catch(e){}
+    guiRef.update();
 }
 
 // ========== Button Click ==========
@@ -132,7 +100,8 @@ function customGuiButton(event){
         savePageItems();
         if(currentPage+1 < totalPages){ 
             currentPage++;
-            updatePage(player, event.API);
+            interact({player: player, API: event.API, npc: lastNpc});
+            player.message("§eSwitched to page " + (currentPage+1));
         } else {
             player.message("§cNo more pages available!");
         }
@@ -142,7 +111,8 @@ function customGuiButton(event){
         if(currentPage > 0){
             savePageItems();
             currentPage--;
-            updatePage(player, event.API);
+            interact({player: player, API: event.API, npc: lastNpc});
+            player.message("§eSwitched to page " + (currentPage+1));
         } else {
             player.message("§cAlready on first page!");
         }
@@ -153,9 +123,8 @@ function customGuiButton(event){
             savePageItems();
             var newPage = totalPages;
             storedSlotItems[newPage] = makeNullArray(slotPositions.length);
-            storedPageTexts[newPage] = "";
             currentPage = newPage;
-            updatePage(player, event.API);
+            interact({player: player, API: event.API, npc: lastNpc});
             player.message("§aCreated page " + (currentPage+1));
         } else {
             player.message("§cMaximum of " + maxPages + " pages reached!");
@@ -298,12 +267,14 @@ function customGuiSlotClicked(event) {
                 }
             }
         }
-    }
+
         // Give reward
         var giveCopy = player.world.createItemFromNbt(boughtItem.getItemNbt());
         player.giveItem(giveCopy);
         player.message("§aPurchase successful!");
     }
+}
+
 // ========== Save GUI ==========
 function customGuiClosed(event) {
     savePageItems();
@@ -319,13 +290,5 @@ function savePageItems(){
         return stack && !stack.isEmpty() ? stack.getItemNbt().toJsonString() : null;
     });
 
-    try {
-        if(guiRef){
-            var tf = guiRef.getComponent(10);
-            if(tf){ storedPageTexts[currentPage] = tf.getText(); }
-        }
-    } catch(e){}
-
     npcData.put("SlotItems", JSON.stringify(storedSlotItems));
-    npcData.put("PageTexts", JSON.stringify(storedPageTexts));
 }
