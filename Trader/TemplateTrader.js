@@ -204,39 +204,71 @@ function customGuiSlotClicked(event) {
         var boughtItem = mySlots[slotIndex].getStack();
         if(!boughtItem || boughtItem.isEmpty()) return;
 
-        for(var i=0;i<priceSlots.length;i++){
-            var priceStack = priceSlots[i].getStack();
-            if(priceStack && !priceStack.isEmpty()) {
-                var totalHave = 0;
-                var inv = player.getInventory().getItems();
-                for(var j=0;j<inv.length;j++){
-                    var s = inv[j];
-                    if(s && s.getName() === priceStack.getName()){
-                        totalHave += s.getStackSize();
+        // --- Fix: Require combined cost properly ---
+        var inv = player.getInventory().getItems();
+        var price1 = priceSlots[0].getStack();
+        var price2 = priceSlots[1].getStack();
+
+        if(price1 && !price1.isEmpty() && price2 && !price2.isEmpty() && price1.getName() === price2.getName()){
+            // Same item type: sum required
+            var required = price1.getStackSize() + price2.getStackSize();
+            var totalHave = 0;
+            for(var j=0;j<inv.length;j++){
+                var s = inv[j];
+                if(s && s.getName() === price1.getName()){
+                    totalHave += s.getStackSize();
+                }
+            }
+            if(totalHave < required){
+                player.message("§cNot enough currency!");
+                return;
+            }
+            // remove items
+            var toRemove = required;
+            for(var j=0;j<inv.length;j++){
+                var s = inv[j];
+                if(s && s.getName() === price1.getName() && toRemove > 0){
+                    var amt = Math.min(toRemove, s.getStackSize());
+                    s.setStackSize(s.getStackSize()-amt);
+                    toRemove -= amt;
+                }
+            }
+        } else {
+            // Different items: check separately
+            for(var i=0;i<priceSlots.length;i++){
+                var p = priceSlots[i].getStack();
+                if(p && !p.isEmpty()){
+                    var totalHave2 = 0;
+                    for(var j=0;j<inv.length;j++){
+                        var s2 = inv[j];
+                        if(s2 && s2.getName() === p.getName()){
+                            totalHave2 += s2.getStackSize();
+                        }
+                    }
+                    if(totalHave2 < p.getStackSize()){
+                        player.message("§cNot enough currency!");
+                        return;
                     }
                 }
-                if(totalHave < priceStack.getStackSize()){
-                    player.message("§cNot enough currency!");
-                    return;
+            }
+            // remove separately
+            for(var i=0;i<priceSlots.length;i++){
+                var p = priceSlots[i].getStack();
+                if(p && !p.isEmpty()){
+                    var toRemove2 = p.getStackSize();
+                    for(var j=0;j<inv.length;j++){
+                        var s3 = inv[j];
+                        if(s3 && s3.getName() === p.getName() && toRemove2 > 0){
+                            var amt2 = Math.min(toRemove2, s3.getStackSize());
+                            s3.setStackSize(s3.getStackSize()-amt2);
+                            toRemove2 -= amt2;
+                        }
+                    }
                 }
             }
         }
 
-        for(var i=0;i<priceSlots.length;i++){
-            var priceStack = priceSlots[i].getStack();
-            if(priceStack && !priceStack.isEmpty()) {
-                var amountToRemove = priceStack.getStackSize();
-                for(var j=0;j<player.getInventory().getItems().length;j++){
-                    var s = player.getInventory().getItems()[j];
-                    if(s && s.getName() === priceStack.getName() && amountToRemove > 0){
-                        var removeAmt = Math.min(amountToRemove, s.getStackSize());
-                        s.setStackSize(s.getStackSize() - removeAmt);
-                        amountToRemove -= removeAmt;
-                    }
-                }
-            }
-        }
-
+        // Give reward
         var giveCopy = player.world.createItemFromNbt(boughtItem.getItemNbt());
         player.giveItem(giveCopy);
         player.message("§aPurchase successful!");
@@ -246,7 +278,7 @@ function customGuiSlotClicked(event) {
 // ========== Save GUI ==========
 function customGuiClosed(event) {
     savePageItems();
-    guiRef = null; // <<< reset so next interact() will recreate it
+    guiRef = null;
 }
 
 function savePageItems(){
