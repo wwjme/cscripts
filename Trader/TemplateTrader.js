@@ -165,10 +165,145 @@ function customGuiButton(event){
 
 // ========== Slot Click ==========
 function customGuiSlotClicked(event) {
-    // unchanged from your version
-    // ...
-}
+    var clickedSlot = event.slot;
+    var stack = event.stack;
+    var player = event.player;
+    var adminMode = (player.getMainhandItem().name === "minecraft:bedrock");
 
+    var slotIndex = mySlots.indexOf(clickedSlot);
+
+    if(adminMode) {
+        if(slotIndex !== -1) {
+            highlightedSlot = clickedSlot;
+            for(var i=0;i<highlightLineIds.length;i++){
+                try { guiRef.removeComponent(highlightLineIds[i]); } catch(e) {}
+            }
+            highlightLineIds = [];
+
+            var pos = slotPositions[slotIndex];
+            var x = pos.x, y = pos.y, w = 18, h = 18;
+            highlightLineIds.push(guiRef.addColoredLine(1, x, y, x+w, y, 0xADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(2, x, y+h, x+w, y+h, 0xADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y+h, 0xADD8E6, 2));
+            highlightLineIds.push(guiRef.addColoredLine(4, x+w, y, x+w, y+h, 0xADD8E6, 2));
+            guiRef.update();
+            return;
+        }
+
+        if(!highlightedSlot) return;
+
+        try {
+            var slotStack = highlightedSlot.getStack();
+            var maxStack = stack ? stack.getMaxStackSize() : 64;
+
+            if(stack && !stack.isEmpty()) {
+                if(slotStack && !slotStack.isEmpty() && slotStack.getDisplayName() === stack.getDisplayName()) {
+                    var total = slotStack.getStackSize() + stack.getStackSize();
+                    if(total <= maxStack) {
+                        slotStack.setStackSize(total);
+                        highlightedSlot.setStack(slotStack);
+                        player.removeItem(stack, stack.getStackSize());
+                    } else {
+                        var overflow = total - maxStack;
+                        slotStack.setStackSize(maxStack);
+                        highlightedSlot.setStack(slotStack);
+
+                        var overflowCopy = player.world.createItemFromNbt(stack.getItemNbt());
+                        overflowCopy.setStackSize(overflow);
+                        player.removeItem(stack, stack.getStackSize());
+                        player.giveItem(overflowCopy);
+                    }
+                } else {
+                    var itemCopy = player.world.createItemFromNbt(stack.getItemNbt());
+                    if(slotStack && !slotStack.isEmpty()) player.giveItem(slotStack);
+                    highlightedSlot.setStack(itemCopy);
+                    player.removeItem(stack, stack.getStackSize());
+                }
+            } else if(slotStack && !slotStack.isEmpty()) {
+                player.giveItem(slotStack);
+                highlightedSlot.setStack(player.world.createItem("minecraft:air", 1));
+                guiRef.update();
+            }
+
+            guiRef.update();
+        } catch(e) {}
+    } else {
+        if(slotIndex % 3 !== 2) return; 
+
+        var rowStart = slotIndex - 2; 
+        var priceSlots = [mySlots[rowStart], mySlots[rowStart+1]];
+        var boughtItem = mySlots[slotIndex].getStack();
+        if(!boughtItem || boughtItem.isEmpty()) return;
+
+        // --- Fix: Require combined cost properly ---
+        var inv = player.getInventory().getItems();
+        var price1 = priceSlots[0].getStack();
+        var price2 = priceSlots[1].getStack();
+
+        if(price1 && !price1.isEmpty() && price2 && !price2.isEmpty() && price1.getName() === price2.getName()){
+            // Same item type: sum required
+            var required = price1.getStackSize() + price2.getStackSize();
+            var totalHave = 0;
+            for(var j=0;j<inv.length;j++){
+                var s = inv[j];
+                if(s && s.getName() === price1.getName()){
+                    totalHave += s.getStackSize();
+                }
+            }
+            if(totalHave < required){
+                player.message("§cNot enough currency!");
+                return;
+            }
+            // remove items
+            var toRemove = required;
+            for(var j=0;j<inv.length;j++){
+                var s = inv[j];
+                if(s && s.getName() === price1.getName() && toRemove > 0){
+                    var amt = Math.min(toRemove, s.getStackSize());
+                    s.setStackSize(s.getStackSize()-amt);
+                    toRemove -= amt;
+                }
+            }
+        } else {
+            // Different items: check separately
+            for(var i=0;i<priceSlots.length;i++){
+                var p = priceSlots[i].getStack();
+                if(p && !p.isEmpty()){
+                    var totalHave2 = 0;
+                    for(var j=0;j<inv.length;j++){
+                        var s2 = inv[j];
+                        if(s2 && s2.getName() === p.getName()){
+                            totalHave2 += s2.getStackSize();
+                        }
+                    }
+                    if(totalHave2 < p.getStackSize()){
+                        player.message("§cNot enough currency!");
+                        return;
+                    }
+                }
+            }
+            // remove separately
+            for(var i=0;i<priceSlots.length;i++){
+                var p = priceSlots[i].getStack();
+                if(p && !p.isEmpty()){
+                    var toRemove2 = p.getStackSize();
+                    for(var j=0;j<inv.length;j++){
+                        var s3 = inv[j];
+                        if(s3 && s3.getName() === p.getName() && toRemove2 > 0){
+                            var amt2 = Math.min(toRemove2, s3.getStackSize());
+                            s3.setStackSize(s3.getStackSize()-amt2);
+                            toRemove2 -= amt2;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Give reward
+        var giveCopy = player.world.createItemFromNbt(boughtItem.getItemNbt());
+        player.giveItem(giveCopy);
+        player.message("§aPurchase successful!");
+    }
 // ========== Save GUI ==========
 function customGuiClosed(event) {
     savePageItems();
