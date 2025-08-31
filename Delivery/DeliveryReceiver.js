@@ -34,6 +34,7 @@ function makeNullArray(n){
 
 function init(e) {
  e.npc.setFaction(4);
+ e.npc.getAi().setStandingType(2);
 }
 
 // Compare items strictly (id + damage + NBT)
