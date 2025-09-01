@@ -137,8 +137,8 @@
                         },
                         "transform": {
                             "t": [
-                                0.0f,
-                                0.0f,
+                                1.438f,
+                                2.25f,
                                 0.0f
                             ],
                             "r": [
@@ -148,8 +148,8 @@
                             ],
                             "s": [
                                 1.0f,
-                                1.0f,
-                                1.0f
+                                6.0f,
+                                3.25f
                             ],
                             "r2": [
                                 0.0f,
@@ -225,6 +225,11 @@
                             ]
                         }
                     }
+                },
+                "display": {
+                    "Lore": [
+                        "\"(+NBT)\""
+                    ]
                 }
             }
         }
@@ -563,7 +568,7 @@
     "CreatureType": 0,
     "PotionDuration": 5,
     "pEffAmp": 0,
-    "TotalTicksAlive": 1103L,
+    "TotalTicksAlive": 3179L,
     "Brain": {
         "memories": {
         }
