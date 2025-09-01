@@ -48,28 +48,6 @@
                     "Properties": {
                         "enabled": 1b,
                         "shadow": 0b,
-                        "transform": {
-                            "t": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ],
-                            "r": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ],
-                            "s": [
-                                1.0f,
-                                1.0f,
-                                1.0f
-                            ],
-                            "r2": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ]
-                        },
                         "form": {
                             "hitboxWidth": 0.5f,
                             "hitboxSneakMultiplier": 0.9f,
@@ -80,11 +58,11 @@
                             "lighting": 1.0f,
                             "visible": 1b,
                             "color": -1,
-                            "model": "drone",
                             "shape_keys": {
                                 "keys": {
                                 }
                             },
+                            "model": "emoticons/steve",
                             "hitboxHeight": 1.8f,
                             "transform_overlay": {
                                 "t": [
@@ -125,8 +103,8 @@
                             "hp": 20.0f,
                             "shaderShadow": 1b,
                             "movement_speed": 0.1f,
-                            "keybind": 0,
                             "hitboxEyeHeight": 0.9f,
+                            "keybind": 0,
                             "actions": {
                             },
                             "transform": {
@@ -157,7 +135,7 @@
                             },
                             "id": "bbs:model"
                         },
-                        "transformThirdPerson": {
+                        "transform": {
                             "t": [
                                 0.0f,
                                 0.0f,
@@ -180,6 +158,28 @@
                             ]
                         },
                         "global": 0b,
+                        "transformThirdPerson": {
+                            "t": [
+                                0.0f,
+                                0.0f,
+                                0.0f
+                            ],
+                            "r": [
+                                0.0f,
+                                0.0f,
+                                0.0f
+                            ],
+                            "s": [
+                                1.0f,
+                                1.0f,
+                                1.0f
+                            ],
+                            "r2": [
+                                0.0f,
+                                0.0f,
+                                0.0f
+                            ]
+                        },
                         "transformInventory": {
                             "t": [
                                 0.0f,
@@ -352,7 +352,7 @@
     ],
     "FactionID": 0,
     "TransformHasJob": 0b,
-    "Name": "test1",
+    "Name": "test2",
     "NpcAngrySound": "",
     "VisibleAvailability": {
         "AvailabilityScoreboardObjective": "",
@@ -469,7 +469,7 @@
     "PotionAmp": 0,
     "maxDelay": 40,
     "ScriptLanguage": "ECMAScript",
-    "MarkovGeneratorId": 1,
+    "MarkovGeneratorId": 4,
     "Motion": [
         0.0d,
         -0.0784000015258789d,
@@ -479,10 +479,10 @@
     "PersistenceRequired": 0b,
     "PotionImmune": 0b,
     "AABB": [
-        -34.80000001192093d,
+        -27.80000001192093d,
         -60.0d,
         -121.80000001192093d,
-        -34.19999998807907d,
+        -27.19999998807907d,
         -58.10000002384186d,
         -121.19999998807907d
     ],
@@ -499,7 +499,7 @@
             "NotShared": 0b,
             "TransZ": 0.0f
         },
-        "LastEdited": 1756731840224L,
+        "LastEdited": 1756731896463L,
         "ArmsConfig": {
             "ScaleY": 1.0f,
             "TransY": 0.0f,
@@ -563,7 +563,7 @@
     "CreatureType": 0,
     "PotionDuration": 5,
     "pEffAmp": 0,
-    "TotalTicksAlive": 2320L,
+    "TotalTicksAlive": 1103L,
     "Brain": {
         "memories": {
         }
@@ -571,7 +571,7 @@
     "TransformHasInv": 0b,
     "Texture": "customnpcs:textures/entity/humanmale/steve.png",
     "Rotation": [
-        146.90692f,
+        -142.29932f,
         0.0f
     ],
     "MinExp": 0,
