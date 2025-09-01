@@ -45,7 +45,7 @@ function init(event){
     var pos = npc.getPos();
      npc.getStats().setMaxHealth(health);
      npc.getStats().getRanged().setStrength(strength);
-     
+     npc.getStats().setHealthRegen(0);
     // Record spawn position once
     if (!npc.storeddata.has("SpawnX")) {
         npc.storeddata.put("SpawnX", pos.getX());
