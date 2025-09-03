@@ -24,7 +24,7 @@ function init(e) {
             "Aaron", "Adam", "Patrick", "Sean", "Zachary", "Nathan", "Samuel", "Kyle",
             "Benjamin", "Paul", "Ethan", "Gregory", "Jordan", "Cameron", "Dylan", "Hunter"
         ];
-
+        display.setModel("customnpcs:Classic");
         display.setSkinTexture(randomFrom(maleSkins));
         display.setName(randomFrom(maleNames));
 
@@ -44,7 +44,7 @@ function init(e) {
             "Lucy", "Avery", "Scarlett", "Aria", "Ellie", "Maya", "Sofia", "Layla",
             "Nora", "Riley", "Hazel", "Aurora", "Violet", "Penelope", "Lillian", "Naomi"
         ];
-
+        display.setModel("customnpcs:Alex");
         display.setSkinTexture(randomFrom(femaleSkins));
         display.setName(randomFrom(femaleNames));
     }
