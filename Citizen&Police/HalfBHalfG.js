@@ -10,9 +10,9 @@ function init(e) {
 
     if (isMale) {
         var maleSkins = [
-            "customnpcs:textures/entity/humanmale/camosteve.png",
-            "customnpcs:textures/entity/humanmale/chefsteve.png",
-            "customnpcs:textures/entity/humanmale/doctorsteve.png"
+            "cyberpunkskins:textures/b/b01",
+            "cyberpunkskins:textures/b/b02",
+            "cyberpunkskins:textures/b/b03",
         ];
         var maleNames = [
             "John", "Michael", "David", "Chris", "Daniel", "Alex", "Robert", "James"
@@ -23,9 +23,9 @@ function init(e) {
 
     } else {
         var femaleSkins = [
-            "customnpcs:textures/entity/humanfemale/camostephanie.png",
-            "customnpcs:textures/entity/humanfemale/chefstephanie.png",
-            "customnpcs:textures/entity/humanfemale/doctorstephanie.png"
+            "cyberpunkskins:textures/g/g01",
+            "cyberpunkskins:textures/g/g02",
+            "cyberpunkskins:textures/g/g03",
         ];
         var femaleNames = [
             "Sarah", "Emily", "Anna", "Sophia", "Kate", "Maria", "Laura", "Emma"
