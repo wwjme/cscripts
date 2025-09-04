@@ -3,7 +3,7 @@ function init(e) {
     var display = npc.getDisplay();
 
     // --- Citizen faction ---
-    npc.setFaction(1);
+    npc.setFaction(15);
 
     // Male or female (50/50)
     var isMale = Math.random() < 0.5;
