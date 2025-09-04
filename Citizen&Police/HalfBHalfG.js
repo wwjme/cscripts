@@ -38,7 +38,6 @@ function init(e) {
             "Dwight", "Byron", "Gilbert", "Leon", "Maurice", "Ivan", "Felix", "Alfred"
         ];
 
-        display.setModel("customnpcs:Classic");
         display.setSkinTexture(randomFrom(maleSkins));
         display.setName(randomFrom(maleNames));
 
@@ -72,7 +71,7 @@ function init(e) {
             "Miranda", "Noelle", "Priscilla", "Iris", "Angela", "Diana", "Paulina", "Renee"
         ];
 
-        display.setModel("customnpcs:Alex");
+        display.setModel("customnpcs:customnpcalex");
         display.setSkinTexture(randomFrom(femaleSkins));
         display.setName(randomFrom(femaleNames));
     }
