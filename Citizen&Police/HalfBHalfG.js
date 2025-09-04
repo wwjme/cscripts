@@ -23,7 +23,6 @@ function init(e) {
             "Jonathan", "Stephen", "Larry", "Scott", "Frank", "Tyler", "Dennis", "Jerry",
             "Aaron", "Adam", "Patrick", "Sean", "Zachary", "Nathan", "Samuel", "Kyle",
             "Benjamin", "Paul", "Ethan", "Gregory", "Jordan", "Cameron", "Dylan", "Hunter",
-            // --- +100 more male names ---
             "Logan", "Adrian", "Connor", "Evan", "Tristan", "Austin", "Shawn", "Colton",
             "Owen", "Landon", "Chad", "Trevor", "Spencer", "Marcus", "Vincent", "Bradley",
             "Peter", "George", "Louis", "Arthur", "Maxwell", "Dean", "Curtis", "Phillip",
@@ -58,7 +57,6 @@ function init(e) {
             "Samantha", "Leah", "Stella", "Claire", "Audrey", "Savannah", "Brooklyn", "Bella",
             "Lucy", "Avery", "Scarlett", "Aria", "Ellie", "Maya", "Sofia", "Layla",
             "Nora", "Riley", "Hazel", "Aurora", "Violet", "Penelope", "Lillian", "Naomi",
-            // --- +100 more female names ---
             "Allison", "Madison", "Eleanor", "Paisley", "Camila", "Genesis", "Peyton", "Hailey",
             "Mackenzie", "Skylar", "Kylie", "Alexis", "Autumn", "Eva", "Bailey", "Cora",
             "Jasmine", "Serenity", "Faith", "Trinity", "Makayla", "Gianna", "Sadie", "Alexa",
