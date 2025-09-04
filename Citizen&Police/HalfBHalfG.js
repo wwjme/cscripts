@@ -22,8 +22,23 @@ function init(e) {
             "Kevin", "Jason", "Justin", "Ryan", "Brandon", "Jacob", "Nicholas", "Eric",
             "Jonathan", "Stephen", "Larry", "Scott", "Frank", "Tyler", "Dennis", "Jerry",
             "Aaron", "Adam", "Patrick", "Sean", "Zachary", "Nathan", "Samuel", "Kyle",
-            "Benjamin", "Paul", "Ethan", "Gregory", "Jordan", "Cameron", "Dylan", "Hunter"
+            "Benjamin", "Paul", "Ethan", "Gregory", "Jordan", "Cameron", "Dylan", "Hunter",
+            // --- +100 more male names ---
+            "Logan", "Adrian", "Connor", "Evan", "Tristan", "Austin", "Shawn", "Colton",
+            "Owen", "Landon", "Chad", "Trevor", "Spencer", "Marcus", "Vincent", "Bradley",
+            "Peter", "George", "Louis", "Arthur", "Maxwell", "Dean", "Curtis", "Phillip",
+            "Craig", "Douglas", "Raymond", "Mitchell", "Derek", "Edwin", "Jonah", "Brady",
+            "Cody", "Dustin", "Blake", "Wesley", "Henry", "Oscar", "Malcolm", "Clifford",
+            "Harold", "Howard", "Bruce", "Victor", "Jeffrey", "Allen", "Caleb", "Gordon",
+            "Neil", "Stuart", "Elliot", "Curt", "Terrence", "Leonard", "Louis", "Randall",
+            "Edgar", "Marshall", "Frederick", "Phillip", "Stanley", "Norman", "Wayne", "Glen",
+            "Elijah", "Hudson", "Bryce", "Troy", "Keith", "Melvin", "Ralph", "Jared",
+            "Joey", "Dominic", "Marco", "Angelo", "Ricky", "Darren", "Clinton", "Damian",
+            "Luther", "Francis", "Hugh", "Julian", "Quentin", "Theo", "Silas", "Earl",
+            "Harvey", "Eugene", "Casey", "Shane", "Colby", "Grant", "Warren", "Russell",
+            "Dwight", "Byron", "Gilbert", "Leon", "Maurice", "Ivan", "Felix", "Alfred"
         ];
+
         display.setModel("customnpcs:Classic");
         display.setSkinTexture(randomFrom(maleSkins));
         display.setName(randomFrom(maleNames));
@@ -42,8 +57,23 @@ function init(e) {
             "Ella", "Grace", "Chloe", "Victoria", "Natalie", "Hannah", "Lily", "Zoe",
             "Samantha", "Leah", "Stella", "Claire", "Audrey", "Savannah", "Brooklyn", "Bella",
             "Lucy", "Avery", "Scarlett", "Aria", "Ellie", "Maya", "Sofia", "Layla",
-            "Nora", "Riley", "Hazel", "Aurora", "Violet", "Penelope", "Lillian", "Naomi"
+            "Nora", "Riley", "Hazel", "Aurora", "Violet", "Penelope", "Lillian", "Naomi",
+            // --- +100 more female names ---
+            "Allison", "Madison", "Eleanor", "Paisley", "Camila", "Genesis", "Peyton", "Hailey",
+            "Mackenzie", "Skylar", "Kylie", "Alexis", "Autumn", "Eva", "Bailey", "Cora",
+            "Jasmine", "Serenity", "Faith", "Trinity", "Makayla", "Gianna", "Sadie", "Alexa",
+            "Katherine", "Piper", "Reagan", "Valeria", "Elena", "Clara", "Vivian", "Julia",
+            "Lydia", "Isla", "Athena", "Aubrey", "Addison", "Camille", "Rose", "Margaret",
+            "Adeline", "Alice", "Eliana", "Valentina", "Willow", "Paislee", "Rylee", "Juliana",
+            "Mariah", "Adrianna", "Josephine", "Delilah", "Gabriella", "Emilia", "Daisy", "Arabella",
+            "Melody", "Summer", "Dakota", "Harmony", "Kinsley", "Parker", "Tessa", "Freya",
+            "Eden", "Hope", "Morgan", "Nicole", "Rebecca", "Rachel", "Vanessa", "Amber",
+            "Bianca", "Chelsea", "Whitney", "Heidi", "Jade", "Ivy", "Phoebe", "Danielle",
+            "Molly", "Amberly", "Kayla", "Gloria", "Lola", "Anastasia", "Esme", "Megan",
+            "Crystal", "Fiona", "Joanna", "Sylvia", "Miriam", "Elise", "Lila", "Cecilia",
+            "Miranda", "Noelle", "Priscilla", "Iris", "Angela", "Diana", "Paulina", "Renee"
         ];
+
         display.setModel("customnpcs:Alex");
         display.setSkinTexture(randomFrom(femaleSkins));
         display.setName(randomFrom(femaleNames));
