@@ -1,610 +1,124 @@
-{
-    "TransformHasDisplay": 0b,
-    "AttackInvisible": 0b,
-    "IsStatue": 0b,
-    "AbsorptionAmount": 0.0f,
-    "SpawnCycle": 0,
-    "Accuracy": 60,
-    "MovingPatern": 0,
-    "HideBodyWhenKilled": 0b,
-    "ReturnToStart": 1b,
-    "ArmorItems": [
-        {
-        },
-        {
-        },
-        {
-        },
-        {
+// === Tour Guide NPC Script with Waypoints + Movement Lock ===
+
+// Track progress per player UUID
+var tourProgress = {};
+// Keep track of path progress per player
+var pathProgress = {};
+// Track if NPC is ready for next step per player
+var readyForNext = {};
+
+var tourStops = [
+    { msg: "Are you ready for a tour?" }, 
+    { msg: "Start with catching about 7 fishes. You'll need it to trade for some money." },
+    { msg: "Let's now go to the second level.", path: [
+        [2338, -48, 848],
+        [2367, -41, 848], 
+        [2388, -41, 785],
+        [2462, -41, 842]
+    ] },
+    { msg: "Take the elevator to second level, I'll be waiting for you up there", coords: [2461, 47, 843], teleport: true },
+    { msg: "Here at Owen's market you can trade fish for emeralds", path: [ [2429, 42, 861],[2424, 42, 869] ] },
+    { msg: "Now you can buy a gun and ammos to do some gigs", coords: [2435, 42, 880] },
+    { msg: "end", coords: [2325, -48, 855], teleport: true }
+];
+
+function interact(e) {
+    var npc = e.npc;
+    var player = e.player;
+    var uuid = player.getUUID();
+
+    if (!tourProgress[uuid]) {
+        tourProgress[uuid] = 0;
+        pathProgress[uuid] = 0;
+        readyForNext[uuid] = true;
+    }
+
+    // Block interaction if NPC is still moving
+    if (!readyForNext[uuid]) {
+        player.message("§c[Tour Guide] Please wait, I'm still moving to the last location!");
+        return;
+    }
+
+    var step = tourProgress[uuid];
+
+    if (step < tourStops.length) {
+        var stop = tourStops[step];
+        npc.say(stop.msg);
+
+        if (stop.coords || stop.path) {
+            if (stop.teleport) {
+                // Teleport instantly
+                var target = stop.coords ? stop.coords : stop.path[stop.path.length - 1];
+                npc.setPosition(target[0], target[1], target[2]);
+                readyForNext[uuid] = true; // instant → ready immediately
+            } else if (stop.coords) {
+                // Walk to location
+                npc.navigateTo(stop.coords[0], stop.coords[1], stop.coords[2], 7);
+                readyForNext[uuid] = false;
+            } else if (stop.path) {
+                // Start path
+                pathProgress[uuid] = 0;
+                var wp = stop.path[pathProgress[uuid]];
+                npc.navigateTo(wp[0], wp[1], wp[2], 7);
+                readyForNext[uuid] = false;
+            }
         }
-    ],
-    "ActiveRange": 32,
-    "TransformHasAdvanced": 0b,
-    "Resistances": {
-        "Knockback": 1.0f,
-        "Explosion": 1.0f,
-        "Melee": 1.0f,
-        "Arrow": 1.0f
-    },
-    "BossColor": 0,
-    "FactionPoints": {
-        "DecreaseFaction2Points": 0b,
-        "OptionFaction2Points": 100,
-        "OptionFactions2": -1,
-        "OptionFaction1Points": 100,
-        "OptionFactions1": -1,
-        "DecreaseFaction1Points": 0b
-    },
-    "CloakTexture": "",
-    "OverlayGlowing": 1b,
-    "Weapons": [
-        {
-            "Slot": 0b,
-            "id": "bbs:model",
-            "Count": 1b,
-            "tag": {
-                "BlockEntityTag": {
-                    "id": "bbs:model_block_entity",
-                    "Properties": {
-                        "enabled": 1b,
-                        "shadow": 0b,
-                        "form": {
-                            "hitboxWidth": 0.5f,
-                            "hitboxSneakMultiplier": 0.9f,
-                            "stateTriggers": {
-                                "list": [
-                                ]
-                            },
-                            "lighting": 1.0f,
-                            "visible": 1b,
-                            "color": -1,
-                            "shape_keys": {
-                                "keys": {
-                                }
-                            },
-                            "model": "emoticons/steve",
-                            "hitboxHeight": 1.8f,
-                            "transform_overlay": {
-                                "t": [
-                                    0.0f,
-                                    0.0f,
-                                    0.0f
-                                ],
-                                "r": [
-                                    0.0f,
-                                    0.0f,
-                                    0.0f
-                                ],
-                                "s": [
-                                    1.0f,
-                                    1.0f,
-                                    1.0f
-                                ],
-                                "r2": [
-                                    0.0f,
-                                    0.0f,
-                                    0.0f
-                                ]
-                            },
-                            "step_height": 0.5f,
-                            "pose_overlay": {
-                                "static": 0b
-                            },
-                            "hitbox": 0b,
-                            "bodyParts": {
-                            },
-                            "uiScale": 1.0f,
-                            "animatable": 1b,
-                            "anchor": {
-                                "attachment": "",
-                                "actor": -1,
-                                "translate": 0b
-                            },
-                            "hp": 20.0f,
-                            "shaderShadow": 1b,
-                            "movement_speed": 0.1f,
-                            "hitboxEyeHeight": 0.9f,
-                            "keybind": 0,
-                            "actions": {
-                            },
-                            "transform": {
-                                "t": [
-                                    0.0f,
-                                    0.0f,
-                                    0.0f
-                                ],
-                                "r": [
-                                    0.0f,
-                                    0.0f,
-                                    0.0f
-                                ],
-                                "s": [
-                                    1.0f,
-                                    1.0f,
-                                    1.0f
-                                ],
-                                "r2": [
-                                    0.0f,
-                                    0.0f,
-                                    0.0f
-                                ]
-                            },
-                            "name": "",
-                            "pose": {
-                                "static": 0b
-                            },
-                            "id": "bbs:model"
-                        },
-                        "transform": {
-                            "t": [
-                                1.438f,
-                                2.25f,
-                                0.0f
-                            ],
-                            "r": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ],
-                            "s": [
-                                1.0f,
-                                6.0f,
-                                3.25f
-                            ],
-                            "r2": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ]
-                        },
-                        "global": 0b,
-                        "transformThirdPerson": {
-                            "t": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ],
-                            "r": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ],
-                            "s": [
-                                1.0f,
-                                1.0f,
-                                1.0f
-                            ],
-                            "r2": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ]
-                        },
-                        "transformInventory": {
-                            "t": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ],
-                            "r": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ],
-                            "s": [
-                                1.0f,
-                                1.0f,
-                                1.0f
-                            ],
-                            "r2": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ]
-                        },
-                        "transformFirstPerson": {
-                            "t": [
-                                0.0f,
-                                0.0f,
-                                -0.25f
-                            ],
-                            "r": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ],
-                            "s": [
-                                1.0f,
-                                1.0f,
-                                1.0f
-                            ],
-                            "r2": [
-                                0.0f,
-                                0.0f,
-                                0.0f
-                            ]
-                        }
-                    }
-                },
-                "display": {
-                    "Lore": [
-                        "\"(+NBT)\""
-                    ]
+
+        tourProgress[uuid] = step + 1;
+    }
+}
+
+function tick(e) {
+    var npc = e.npc;
+
+    for (var uuid in tourProgress) {
+        var step = tourProgress[uuid] - 1; // current stop
+        var stop = tourStops[step];
+        if (!stop) continue;
+
+        // Handle waypoint paths
+        if (stop.path) {
+            var currentWpIndex = pathProgress[uuid];
+            if (currentWpIndex >= stop.path.length) {
+                // Finished all waypoints
+                readyForNext[uuid] = true;
+                continue;
+            }
+
+            var wp = stop.path[currentWpIndex];
+            var dx = npc.getX() - wp[0];
+            var dy = npc.getY() - wp[1];
+            var dz = npc.getZ() - wp[2];
+            var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+            if (dist < 2) { 
+                // Reached waypoint
+                pathProgress[uuid]++;
+                if (pathProgress[uuid] < stop.path.length) {
+                    var nextWp = stop.path[pathProgress[uuid]];
+                    npc.navigateTo(nextWp[0], nextWp[1], nextWp[2], 7);
+                } else {
+                    // All waypoints reached
+                    readyForNext[uuid] = true;
                 }
+            } else if (!npc.isNavigating()) {
+                // Retry if stuck
+                npc.navigateTo(wp[0], wp[1], wp[2], 7);
             }
         }
-    ],
-    "pSize": 5,
-    "HandDropChances": [
-        0.085f,
-        0.085f
-    ],
-    "BossBar": 0b,
-    "MovingState": 0,
-    "pRender3D": 1b,
-    "FireRate": 5,
-    "pArea": 0,
-    "NPCDialogOptions": [
-    ],
-    "GroundSound": "minecraft:block.stone.break",
-    "OnAttack": 0,
-    "MovingPause": 1b,
-    "FiringSound": "minecraft:entity.arrow.shoot",
-    "Scripts": [
-    ],
-    "ShowName": 0,
-    "LinkedNpcName": "",
-    "Armor": [
-    ],
-    "CanSprint": 0b,
-    "ReactsToFire": 0b,
-    "LootMode": 0,
-    "PotionEffect": 0,
-    "NpcInteractNPCLines": {
-        "Lines": [
-        ]
-    },
-    "SkinUrl": "",
-    "IgnoreCobweb": 0b,
-    "PositionOffsetZ": 5.0f,
-    "Orientation": 0,
-    "StandingState": 0,
-    "MoveSpeed": 5,
-    "CombatRegen": 0,
-    "Fire": -1s,
-    "ModRev": 18,
-    "KilledTime": 0L,
-    "WalkingRange": 10,
-    "DeathTime": 0s,
-    "CanDrown": 1b,
-    "pStick": 0b,
-    "pDamage": 4,
-    "DropChance": [
-        {
-            "Slot": 0,
-            "Integer": 100.0f
-        },
-        {
-            "Slot": 1,
-            "Integer": 100.0f
-        },
-        {
-            "Slot": 2,
-            "Integer": 100.0f
-        },
-        {
-            "Slot": 3,
-            "Integer": 100.0f
-        },
-        {
-            "Slot": 4,
-            "Integer": 100.0f
-        },
-        {
-            "Slot": 5,
-            "Integer": 100.0f
-        },
-        {
-            "Slot": 6,
-            "Integer": 100.0f
-        },
-        {
-            "Slot": 7,
-            "Integer": 100.0f
-        },
-        {
-            "Slot": 8,
-            "Integer": 100.0f
-        }
-    ],
-    "NpcAttackLines": {
-        "Lines": [
-        ]
-    },
-    "TransformHasRole": 0b,
-    "AggroRange": 16,
-    "OnGround": 1b,
-    "MaxFiringRange": 15,
-    "pEffect": 0,
-    "HitSound": "minecraft:entity.arrow.hit",
-    "pPhysics": 1b,
-    "NpcScenes": {
-        "Scenes": [
-        ]
-    },
-    "CanLeap": 0b,
-    "Attributes": [
-        {
-            "Name": "minecraft:generic.flying_speed",
-            "Base": 0.5d
-        },
-        {
-            "Name": "minecraft:generic.max_health",
-            "Base": 20.0d
-        },
-        {
-            "Name": "minecraft:generic.follow_range",
-            "Base": 32.0d
-        },
-        {
-            "Name": "minecraft:generic.movement_speed",
-            "Base": 0.25d
-        },
-        {
-            "Name": "minecraft:generic.attack_damage",
-            "Base": 5.0d
-        }
-    ],
-    "FactionID": 0,
-    "TransformHasJob": 0b,
-    "Name": "test2",
-    "NpcAngrySound": "",
-    "VisibleAvailability": {
-        "AvailabilityScoreboardObjective": "",
-        "AvailabilityDialog3Id": -1,
-        "AvailabilityFaction2Stance": 0,
-        "AvailabilityDialog4": 0,
-        "AvailabilityQuest2": 0,
-        "AvailabilityFaction": 0,
-        "AvailabilityDialog2Id": -1,
-        "AvailabilityQuest3Id": -1,
-        "AvailabilityQuest": 0,
-        "AvailabilityMinPlayerLevel": 0,
-        "AvailabilityQuest4Id": -1,
-        "AvailabilityQuest2Id": -1,
-        "AvailabilityDialog3": 0,
-        "AvailabilityDayTime": 0,
-        "AvailabilityScoreboard2Type": 1,
-        "AvailabilityScoreboard2Objective": "",
-        "AvailabilityDialog": 0,
-        "AvailabilityDialog4Id": -1,
-        "AvailabilityQuestId": -1,
-        "AvailabilityDialogId": -1,
-        "AvailabilityScoreboardType": 1,
-        "AvailabilityDialog2": 0,
-        "AvailabilityQuest3": 0,
-        "AvailabilityQuest4": 0,
-        "AvailabilityFactionId": -1,
-        "AvailabilityFactionStance": 0,
-        "AvailabilityFaction2": 0,
-        "AvailabilityFaction2Id": -1,
-        "AvailabilityScoreboardValue": 1,
-        "AvailabilityScoreboard2Value": 1,
-        "ModRev": 18
-    },
-    "npcInteracting": 1b,
-    "FindShelter": 2,
-    "Size": 5,
-    "HurtByTimestamp": 0,
-    "AttackStrenght": 5,
-    "ScriptEnabled": 0b,
-    "HealthRegen": 1,
-    "pXlr8": 0b,
-    "NpcStepSound": "",
-    "cardinal_components": {
-    },
-    "MovementType": 0,
-    "FireIndirect": 0,
-    "Role": 0,
-    "DoorInteract": 2,
-    "DirectLOS": 1b,
-    "TransformIsActive": 0b,
-    "SkinColor": 16777215,
-    "PositionOffsetX": 5.0f,
-    "NoFallDamage": 0b,
-    "BurstCount": 1,
-    "pSpeed": 10,
-    "TransformHasAI": 0b,
-    "AttackRange": 2,
-    "pTrail": 0,
-    "id": "customnpcs:customnpc",
-    "Title": "",
-    "pGlows": 0b,
-    "AttackSpeed": 20,
-    "HurtTime": 0s,
-    "FallFlying": 0b,
-    "GlowTexture": "",
-    "NpcLines": {
-        "Lines": [
-        ]
-    },
-    "MountControl": 0b,
-    "MaxExp": 0,
-    "AimWhileShooting": 0b,
-    "pImpact": 0,
-    "ImmuneToFire": 0b,
-    "DisablePitch": 0b,
-    "LeftHanded": 0b,
-    "minDelay": 20,
-    "MoveState": 0,
-    "NpcInteractLines": {
-        "Lines": [
-            {
-                "Song": "",
-                "Slot": 0,
-                "Line": "Hello @p"
+
+        // Handle single coordinate stops
+        if (stop.coords && !stop.path && !stop.teleport) {
+            var dx2 = npc.getX() - stop.coords[0];
+            var dy2 = npc.getY() - stop.coords[1];
+            var dz2 = npc.getZ() - stop.coords[2];
+            var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2 + dz2 * dz2);
+
+            if (dist2 < 2) {
+                readyForNext[uuid] = true;
+            } else if (!npc.isNavigating()) {
+                npc.navigateTo(stop.coords[0], stop.coords[1], stop.coords[2], 7);
             }
-        ]
-    },
-    "Invulnerable": 0b,
-    "DefendFaction": 0b,
-    "NpcJob": 0,
-    "ArmorDropChances": [
-        0.085f,
-        0.085f,
-        0.085f,
-        0.085f
-    ],
-    "NpcIdleSound": "",
-    "NpcInv": [
-    ],
-    "pSpin": 0b,
-    "AttackOtherFactions": 0b,
-    "MovingPos": 0,
-    "pDur": 5,
-    "NpcVisible": 0,
-    "stopAndInteract": 1b,
-    "TransformEditingModus": 0b,
-    "NpcsTimers": [
-    ],
-    "KnockBack": 0,
-    "RespawnTime": 20,
-    "OrderedLines": 0b,
-    "ShotCount": 1,
-    "PotionAmp": 0,
-    "maxDelay": 40,
-    "ScriptLanguage": "ECMAScript",
-    "MarkovGeneratorId": 4,
-    "Motion": [
-        0.0d,
-        -0.0784000015258789d,
-        0.0d
-    ],
-    "CanPickUpLoot": 0b,
-    "PersistenceRequired": 0b,
-    "PotionImmune": 0b,
-    "AABB": [
-        -27.80000001192093d,
-        -60.0d,
-        -121.80000001192093d,
-        -27.19999998807907d,
-        -58.10000002384186d,
-        -121.19999998807907d
-    ],
-    "NpcDeathSound": "minecraft:entity.player.hurt",
-    "NpcModelData": {
-        "ExtraData": {
-        },
-        "HeadConfig": {
-            "ScaleY": 1.0f,
-            "TransY": 0.0f,
-            "ScaleZ": 1.0f,
-            "TransX": 0.0f,
-            "ScaleX": 1.0f,
-            "NotShared": 0b,
-            "TransZ": 0.0f
-        },
-        "LastEdited": 1756731896463L,
-        "ArmsConfig": {
-            "ScaleY": 1.0f,
-            "TransY": 0.0f,
-            "ScaleZ": 1.0f,
-            "TransX": 0.0f,
-            "ScaleX": 1.0f,
-            "NotShared": 0b,
-            "TransZ": 0.0f
-        },
-        "Legs2Config": {
-            "ScaleY": 1.0f,
-            "TransY": 0.0f,
-            "ScaleZ": 1.0f,
-            "TransX": 0.0f,
-            "ScaleX": 1.0f,
-            "NotShared": 0b,
-            "TransZ": 0.0f
-        },
-        "MoveAnimation": 16,
-        "ModelType": 0,
-        "BodyConfig": {
-            "ScaleY": 1.0f,
-            "TransY": 0.0f,
-            "ScaleZ": 1.0f,
-            "TransX": 0.0f,
-            "ScaleX": 1.0f,
-            "NotShared": 0b,
-            "TransZ": 0.0f
-        },
-        "NewParts": [
-        ],
-        "Animation": 0,
-        "LegsConfig": {
-            "ScaleY": 1.0f,
-            "TransY": 0.0f,
-            "ScaleZ": 1.0f,
-            "TransX": 0.0f,
-            "ScaleX": 1.0f,
-            "NotShared": 0b,
-            "TransZ": 0.0f
-        },
-        "WingMode": 0,
-        "SimpleRender": 0b,
-        "Arms2Config": {
-            "ScaleY": 1.0f,
-            "TransY": 0.0f,
-            "ScaleZ": 1.0f,
-            "TransX": 0.0f,
-            "ScaleX": 1.0f,
-            "NotShared": 0b,
-            "TransZ": 0.0f
-        },
-        "CustomSkinUrl": "",
-        "DisplayName": "",
-        "Parts": [
-        ]
-    },
-    "BurnInSun": 0b,
-    "NoLivingAnimation": 0b,
-    "TransformHasStats": 0b,
-    "CreatureType": 0,
-    "PotionDuration": 5,
-    "pEffAmp": 0,
-    "TotalTicksAlive": 3179L,
-    "Brain": {
-        "memories": {
         }
-    },
-    "TransformHasInv": 0b,
-    "Texture": "customnpcs:textures/entity/humanmale/steve.png",
-    "Rotation": [
-        -142.29932f,
-        0.0f
-    ],
-    "MinExp": 0,
-    "NpcKilledLines": {
-        "Lines": [
-        ]
-    },
-    "NpcKillLines": {
-        "Lines": [
-        ]
-    },
-    "DistanceToMelee": 0,
-    "AvoidsSun": 0b,
-    "HandItems": [
-        {
-        },
-        {
-        }
-    ],
-    "Air": 300s,
-    "PositionOffsetY": 5.0f,
-    "AvoidsWater": 0b,
-    "MarkovGender": 0,
-    "NpcHurtSound": "minecraft:entity.player.hurt",
-    "FallDistance": 0.0f,
-    "CanSwim": 1b,
-    "MaxHealth": 20,
-    "Health": 20.0f,
-    "UsingSkinUrl": 0b,
-    "PortalCooldown": 0
+    }
 }
