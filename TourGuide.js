@@ -1,9 +1,11 @@
-// === Tour Guide NPC Script with Waypoints + Debug ===
+// === Tour Guide NPC Script with Waypoints + Movement Lock ===
 
 // Track progress per player UUID
 var tourProgress = {};
 // Keep track of path progress per player
 var pathProgress = {};
+// Track if NPC is ready for next step per player
+var readyForNext = {};
 
 var tourStops = [
     { msg: "Are you ready for a tour?" }, 
@@ -48,6 +50,13 @@ function interact(e) {
     if (!tourProgress[uuid]) {
         tourProgress[uuid] = 0;
         pathProgress[uuid] = 0;
+        readyForNext[uuid] = true;
+    }
+
+    // Block interaction if NPC is still moving
+    if (!readyForNext[uuid]) {
+        player.message("§c[Tour Guide] Please wait, I'm still moving to the next location!");
+        return;
     }
 
     var step = tourProgress[uuid];
@@ -58,17 +67,20 @@ function interact(e) {
 
         if (stop.coords || stop.path) {
             if (stop.teleport) {
-                // Teleport instantly (single or last waypoint)
+                // Teleport instantly
                 var target = stop.coords ? stop.coords : stop.path[stop.path.length - 1];
                 npc.setPosition(target[0], target[1], target[2]);
+                readyForNext[uuid] = true; // instant → ready immediately
             } else if (stop.coords) {
-                // Navigate to single coordinate
+                // Walk to location
                 npc.navigateTo(stop.coords[0], stop.coords[1], stop.coords[2], 7);
+                readyForNext[uuid] = false;
             } else if (stop.path) {
-                // Start from first waypoint
+                // Start path
                 pathProgress[uuid] = 0;
                 var wp = stop.path[pathProgress[uuid]];
                 npc.navigateTo(wp[0], wp[1], wp[2], 7);
+                readyForNext[uuid] = false;
             }
         }
 
@@ -76,38 +88,56 @@ function interact(e) {
     }
 }
 
-// Handle NPC movement per tick to continue along waypoints
 function tick(e) {
     var npc = e.npc;
 
     for (var uuid in tourProgress) {
         var step = tourProgress[uuid] - 1; // current stop
         var stop = tourStops[step];
-        if (!stop || !stop.path) continue;
+        if (!stop) continue;
 
-        var currentWpIndex = pathProgress[uuid];
-        if (currentWpIndex >= stop.path.length) continue;
+        // Handle waypoint paths
+        if (stop.path) {
+            var currentWpIndex = pathProgress[uuid];
+            if (currentWpIndex >= stop.path.length) {
+                // Finished all waypoints
+                readyForNext[uuid] = true;
+                continue;
+            }
 
-        var wp = stop.path[currentWpIndex];
+            var wp = stop.path[currentWpIndex];
+            var dx = npc.getX() - wp[0];
+            var dy = npc.getY() - wp[1];
+            var dz = npc.getZ() - wp[2];
+            var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-        // Compute distance manually
-        var dx = npc.getX() - wp[0];
-        var dy = npc.getY() - wp[1];
-        var dz = npc.getZ() - wp[2];
-        var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-        if (dist < 2) { 
-            // Reached waypoint → go to next
-            pathProgress[uuid]++;
-            if (pathProgress[uuid] < stop.path.length) {
-                var nextWp = stop.path[pathProgress[uuid]];
-                npc.navigateTo(nextWp[0], nextWp[1], nextWp[2], 7);
-
-            } 
-        } else {
-            // If NPC is stuck (not navigating), retry navigation
-            if (!npc.isNavigating()) {
+            if (dist < 2) { 
+                // Reached waypoint
+                pathProgress[uuid]++;
+                if (pathProgress[uuid] < stop.path.length) {
+                    var nextWp = stop.path[pathProgress[uuid]];
+                    npc.navigateTo(nextWp[0], nextWp[1], nextWp[2], 7);
+                } else {
+                    // All waypoints reached
+                    readyForNext[uuid] = true;
+                }
+            } else if (!npc.isNavigating()) {
+                // Retry if stuck
                 npc.navigateTo(wp[0], wp[1], wp[2], 7);
+            }
+        }
+
+        // Handle single coordinate stops
+        if (stop.coords && !stop.path && !stop.teleport) {
+            var dx2 = npc.getX() - stop.coords[0];
+            var dy2 = npc.getY() - stop.coords[1];
+            var dz2 = npc.getZ() - stop.coords[2];
+            var dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2 + dz2 * dz2);
+
+            if (dist2 < 2) {
+                readyForNext[uuid] = true;
+            } else if (!npc.isNavigating()) {
+                npc.navigateTo(stop.coords[0], stop.coords[1], stop.coords[2], 7);
             }
         }
     }
