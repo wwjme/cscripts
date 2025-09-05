@@ -26,7 +26,7 @@ var tourStops = [
     { msg: "You can check the guides here", coords: [2497, 42,846] },
     { msg: "The Neonites are the first level enemy you will deal with, after that are the drones you see around here, the same enemy type will defend each other so watch out for nearby enemies", coords: [2546, 42, 831] },
     { msg: "Over here we have a furniture store", coords: [2566, 42, 886] },
-    { msg: "Now we will check out the beginner apartments, find your room number assigned on your key. You can place and break blocks in your apartment. There are 5 pots you can use to grow plants", path: [[2549 42 887],[2598,42,980] },
+    { msg: "Now we will check out the beginner apartments, find your room number assigned on your key. You can place and break blocks in your apartment. There are 5 pots you can use to grow plants", path: [[2549, 42, 887],[2598, 42, 980]] },
     
     { msg: "end", coords: [2434, 42, 878], teleport: true }
 ];
