@@ -14,7 +14,7 @@ var tourStops = [
      [2462, -41, 842]
      ] },
     { msg: "Take the elevator to second level, I'll be waiting for you up there", coords: [2461, 47, 843], teleport: true },
-    { msg: "Here at Owen's market you can trade fish for emeralds", coords: [2424, 42, 869] },
+    { msg: "Here at Owen's market you can trade fish for emeralds", path: [ [2429, 42, 861],[2424, 42, 869] ] },
     { msg: "Now you can buy a gun and ammos to do some gigs", coords: [2435, 42, 880] },
     { msg: "Here you can get more info about Replicants hunting and rewards", path: [[2427, 42, 870],[2425, 42, 845]] },
     { msg: "In here is a drones shop, you can hire them to assist you with hunting replicants", coords: [2432, 42, 833] },
@@ -52,17 +52,14 @@ function interact(e) {
                 // Teleport instantly (single or last waypoint)
                 var target = stop.coords ? stop.coords : stop.path[stop.path.length - 1];
                 npc.setPosition(target[0], target[1], target[2]);
-                npc.getWorld().broadcast("§b[TourGuide Debug] Teleported to " + target);
             } else if (stop.coords) {
                 // Navigate to single coordinate
-                npc.navigateTo(stop.coords[0], stop.coords[1], stop.coords[2], 8);
-                npc.getWorld().broadcast("§b[TourGuide Debug] Navigating to " + stop.coords);
+                npc.navigateTo(stop.coords[0], stop.coords[1], stop.coords[2], 7);
             } else if (stop.path) {
                 // Start from first waypoint
                 pathProgress[uuid] = 0;
                 var wp = stop.path[pathProgress[uuid]];
-                npc.navigateTo(wp[0], wp[1], wp[2], 8);
-                npc.getWorld().broadcast("§b[TourGuide Debug] Starting path to waypoint 0 at " + wp);
+                npc.navigateTo(wp[0], wp[1], wp[2], 7);
             }
         }
 
@@ -98,16 +95,13 @@ function tick(e) {
             pathProgress[uuid]++;
             if (pathProgress[uuid] < stop.path.length) {
                 var nextWp = stop.path[pathProgress[uuid]];
-                npc.navigateTo(nextWp[0], nextWp[1], nextWp[2], 8);
-                npc.getWorld().broadcast("§b[TourGuide Debug] Reached waypoint " + (currentWpIndex) + ", moving to waypoint " + pathProgress[uuid] + " at " + nextWp);
-            } else {
-                npc.getWorld().broadcast("§b[TourGuide Debug] Finished all waypoints for this stop.");
-            }
+                npc.navigateTo(nextWp[0], nextWp[1], nextWp[2], 7);
+
+            } 
         } else {
             // If NPC is stuck (not navigating), retry navigation
             if (!npc.isNavigating()) {
-                npc.navigateTo(wp[0], wp[1], wp[2], 8);
-                npc.getWorld().broadcast("§c[TourGuide Debug] NPC stuck! Retrying waypoint " + currentWpIndex + " at " + wp);
+                npc.navigateTo(wp[0], wp[1], wp[2], 7);
             }
         }
     }
