@@ -29,7 +29,7 @@ var tourStops = [
     { msg: "Now we will check out the beginner apartments, find your room number assigned on your key. You can place and break blocks in your apartment. There are 5 pots you can use to grow plants", path: [[2549, 42, 887],[2598, 42, 980]] },
     { msg: "Let's go downstair and check out the boatdock", coords: [2589, 37, 971] },
     { msg: " ", coords: [2589, -51, 971],teleport:true },
-    { msg: "follow me this way", path: [[2603, -46, 976],[2603, -46, 1109],[2680 -52 1125],[2750, -47, 1069],[2760, -52, 1066]] },
+    { msg: "follow me this way", path: [[2603, -46, 976],[2603, -46, 1109],[2680, -52, 1125],[2750, -47, 1069],[2760, -52, 1066]] },
     { msg: "There are rarer and more valuable fishes in the oceans, the green water area specifically, go directly straight out there and you'll find it. Becareful not going to far bc you'll reach the border and the ship will stuck outside, when youre ready come back here and ill show you the Metro", coords: [2760, -52, 1066] },
     
     { msg: "end", coords: [2434, 42, 878], teleport: true }
