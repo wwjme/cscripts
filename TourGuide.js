@@ -31,8 +31,13 @@ var tourStops = [
     { msg: " ", coords: [2589, -51, 971],teleport:true },
     { msg: "follow me this way", path: [[2603, -46, 976],[2603, -46, 1109],[2680, -52, 1125],[2750, -47, 1069],[2760, -52, 1066]] },
     { msg: "There are rarer and more valuable fishes in the oceans, the green water area specifically, go directly straight out there and you'll find it. Becareful not going to far bc you'll reach the border and the ship will stuck outside, when youre ready come back here and ill show you the Metro", coords: [2760, -52, 1066] },
+    { msg: "Ok let's now go check out the Metro", path: [[2667, -52, 1125],[2616, -51, 1111],[2586, -35, 1045],[2577, -35, 1033]] },
+    { msg: " ", coords: [2564, -5, 1032],teleport:true },
+    { msg: "all the vending machines you can use", coords: [2564, -5, 1032],},
+    { msg: "From here you can travel to different areas of the city, if you ever get lost, follow the markers on the map. That's the end of our tour, thanks for joining us, Have fun exploring!", coords: [2556, -5, 1032],},
+
     
-    { msg: "end", coords: [2434, 42, 878], teleport: true }
+    { msg: "end", coords: [2325, -48, 855], teleport: true }
 ];
 
 function interact(e) {
@@ -68,9 +73,6 @@ function interact(e) {
         }
 
         tourProgress[uuid] = step + 1;
-    } else {
-        npc.say("That's the end of the tour!");
-        player.message("§a[Tour Guide] Thanks for joining the tour!");
     }
 }
 
