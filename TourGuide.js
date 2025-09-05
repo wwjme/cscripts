@@ -22,7 +22,11 @@ var tourStops = [
     { msg: "You can claim your apartment key here with the disc in your inventory, if there are no keys available, let the dev know and they will give you one in your inventory", coords: [2427, 42, 806] },
     { msg: "Over here is a cars shop", coords: [2427, 42, 806] },
     { msg: "You can also buy seeds and grow crops to make profits, Sobiezója also sell decorational items", path: [[2419, 42, 809],[2390, 42, 760]] },
-    { msg: "Now we will go check out the delivery job", path: [[2426, 42, 859],[2503, 42, 843]] },
+    { msg: "Now we will go check out the delivery job", path: [[2426, 42, 859],[2503, 42, 843],[2497, 42,846]] },
+    { msg: "You can check the guides here", coords: [2497, 42,846] },
+    { msg: "The Neonites are the first level enemy you will deal with, after that are the drones you see around here, the same enemy type will defend each other so watch out for nearby enemies", coords: [2546, 42, 831] },
+    { msg: "Over here we have a furniture store", coords: [2566, 42, 886] },
+    { msg: "Now we will check out the beginner apartments, find your room number assigned on your key. You can place and break blocks in your apartment. There are 5 pots you can use to grow plants", path: [[2549 42 887],[2598,42,980] },
     
     { msg: "end", coords: [2434, 42, 878], teleport: true }
 ];
