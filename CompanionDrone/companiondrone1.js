@@ -2,10 +2,10 @@ var RANGE = 100;
 var lastOwnerAttackTime = 0;
 var currentTargetId = null;
 var navResetDone = false;
-var teleportedToSpawnNoOwner = false; // track teleport due to no owner
 
 var health = 40;
 var strength = 5;
+
 // --- Helper functions ---
 function hasFunc(o, name){
     try { return o && typeof o[name] === "function"; } catch(e){ return false; }
@@ -43,9 +43,10 @@ function scanForThreats(npc, owner, world){
 function init(event){
     var npc = event.npc;
     var pos = npc.getPos();
-     npc.getStats().setMaxHealth(health);
-     npc.getStats().getRanged().setStrength(strength);
-     npc.getStats().setHealthRegen(0);
+    npc.getStats().setMaxHealth(health);
+    npc.getStats().getRanged().setStrength(strength);
+    npc.getStats().setHealthRegen(0);
+
     // Record spawn position once
     if (!npc.storeddata.has("SpawnX")) {
         npc.storeddata.put("SpawnX", pos.getX());
@@ -54,9 +55,10 @@ function init(event){
         npc.storeddata.put("SpawnWorld", npc.getWorld().getName());
     }
 
-    var owner = npc.role ? npc.role.getFollowing() : null;
-    npc.storeddata.put("OwnerName", owner ? owner.getName() : 0);
-    npc.storeddata.put("OwnerUUID", owner ? owner.getUUID() : 0);
+    // Initialize flags
+    if (!npc.storeddata.has("HasBeenHiredOnce")) {
+        npc.storeddata.put("HasBeenHiredOnce", 0);
+    }
 }
 
 // --- Player interact function ---
@@ -90,29 +92,23 @@ function tick(event){
 
     // --- Handle no owner ---
     if (!owner){
-        npc.storeddata.put("OwnerName", 0);
-        npc.storeddata.put("OwnerUUID", 0);
         npc.setAttackTarget(null);
         currentTargetId = null;
 
-        if (!teleportedToSpawnNoOwner && sWorld === world.getName()){
-            npc.getAi().setNavigationType(0);
-            npc.setPos(world.getBlock(sx, sy, sz).getPos());
-            teleportedToSpawnNoOwner = true; // only teleport once
-            npc.reset();
-            npc.getAi().setNavigationType(1);
+        // Only spawn a clone after this NPC has been hired at least once
+        if (npc.storeddata.get("HasBeenHiredOnce") === 1 && sWorld === world.getName()){
+            world.broadcast("§c[Drone Debug] No owner found. Spawning clone and despawning this drone.");
+
+            world.spawnClone(sx, sy, sz, 1, "CompanionDrone1");
+            npc.despawn();
         }
         return;
     } else {
-        // reset the no-owner teleport flag when owner appears
-        teleportedToSpawnNoOwner = false;
-    }
-
-    // --- Update owner info ---
-    var ownerUUID = owner.getUUID();
-    if (npc.storeddata.get("OwnerUUID") !== ownerUUID){
-        npc.storeddata.put("OwnerName", owner.getName());
-        npc.storeddata.put("OwnerUUID", ownerUUID);
+        // Mark that this NPC has been hired at least once
+        if (npc.storeddata.get("HasBeenHiredOnce") === 0){
+            world.broadcast("§a[Drone Debug] Drone hired for the first time.");
+            npc.storeddata.put("HasBeenHiredOnce", 1);
+        }
     }
 
     // --- Clear dead target ---
