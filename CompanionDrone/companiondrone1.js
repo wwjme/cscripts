@@ -97,8 +97,6 @@ function tick(event){
 
         // Only spawn a clone after this NPC has been hired at least once
         if (npc.storeddata.get("HasBeenHiredOnce") === 1 && sWorld === world.getName()){
-            world.broadcast("§c[Drone Debug] No owner found. Spawning clone and despawning this drone.");
-
             world.spawnClone(sx, sy, sz, 1, "CompanionDrone1");
             npc.despawn();
         }
@@ -106,7 +104,6 @@ function tick(event){
     } else {
         // Mark that this NPC has been hired at least once
         if (npc.storeddata.get("HasBeenHiredOnce") === 0){
-            world.broadcast("§a[Drone Debug] Drone hired for the first time.");
             npc.storeddata.put("HasBeenHiredOnce", 1);
         }
     }
