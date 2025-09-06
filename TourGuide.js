@@ -71,6 +71,10 @@ function interact(e) {
                 var target = stop.coords ? stop.coords : stop.path[stop.path.length - 1];
                 npc.setPosition(target[0], target[1], target[2]);
                 readyForNext[uuid] = true; // instant → ready immediately
+                if (step === tourStops.length - 1) {
+                    npc.getWorld().spawnClone(2325, -48, 855, 3, "Tour Guide");
+                    npc.despawn();
+                }
             } else if (stop.coords) {
                 // Walk to location
                 npc.navigateTo(stop.coords[0], stop.coords[1], stop.coords[2], 7);
