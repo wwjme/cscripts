@@ -1,7 +1,7 @@
 function init(e) {
     var npc = e.npc;
     var display = npc.getDisplay();
-
+    npc.getAi().setRetaliateType(1);
     // --- Citizen faction ---
     npc.setFaction(15);
     npc.getAi().setAvoidsWater(true);
