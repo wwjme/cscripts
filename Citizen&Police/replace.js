@@ -14,5 +14,5 @@ function init(e){
    npc.world.spawnClone(pos.getX(), pos.getY(), pos.getZ(), 3, "CitizenPolice");
    npc.despawn();
    npc.say("daspawn");
-  
+  }
 }
