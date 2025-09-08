@@ -20,7 +20,9 @@ function init(e) {
         npc.getStats().getRanged().setAccuracy(80);
         npc.getStats().getRanged().setRange(100);
         npc.getStats().setAggroRange(100);
-
+        npc.getStats().getRanged().setSound(0,"customnpcs:gun.pistol.shot");
+        npc.getStats().getRanged().setSound(1,"");
+        npc.getStats().getRanged().setSound(2,"tacz:target_block_hit");
         return;
     }
 
