@@ -52,6 +52,7 @@ function init(e) {
             "Dwight", "Byron", "Gilbert", "Leon", "Maurice", "Ivan", "Felix", "Alfred"
         ];
         npc.getAi().setRetaliateType(1);
+        npc.setMainhandItem(null);
         display.setSkinTexture(randomFrom(maleSkins));
         display.setName(randomFrom(maleNames));
 
@@ -88,6 +89,7 @@ function init(e) {
         display.setModel("customnpcs:customnpcalex");
         display.setSkinTexture(randomFrom(femaleSkins));
         display.setName(randomFrom(femaleNames));
+        npc.setMainhandItem(null);
     }
 }
 
