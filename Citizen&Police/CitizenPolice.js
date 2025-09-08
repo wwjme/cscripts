@@ -10,15 +10,18 @@ function init(e) {
         display.setSkinTexture("cyberpunkskins:textures/lcpd.png");
         display.setName("LCPD");
         npc.getAi().setRetaliateType(0);
+        npc.getStats().setMaxHealth(100);
 
         var gun = npc.world.createItem("tacz:modern_kinetic_gun",1);
         gun.getNbt().putString("GunId","cyber_armorer:ajax");
         npc.setMainhandItem(gun);
         npc.getInventory().setProjectile(npc.world.createItem("minecraft:gold_nugget",1));
-        npc.getStats().setMaxHealth(100);
+  
         npc.getStats().getRanged().setStrength(8);
         npc.getStats().getRanged().setAccuracy(80);
         npc.getStats().getRanged().setRange(100);
+        npc.getStats().getRanged().setDelay(1,1);
+        npc.getStats().getRanged().setBurstDelay(1);
         npc.getStats().setAggroRange(100);
         npc.getStats().getRanged().setSound(0,"customnpcs:gun.pistol.shot");
         npc.getStats().getRanged().setSound(1,"");
@@ -62,6 +65,7 @@ function init(e) {
         ];
         npc.getAi().setRetaliateType(1);
         npc.setMainhandItem(null);
+        npc.getStats().setMaxHealth(20);
         display.setSkinTexture(randomFrom(maleSkins));
         display.setName(randomFrom(maleNames));
 
@@ -95,6 +99,7 @@ function init(e) {
             "Miranda", "Noelle", "Priscilla", "Iris", "Angela", "Diana", "Paulina", "Renee"
         ];
         npc.getAi().setRetaliateType(1);
+        npc.getStats().setMaxHealth(20);
         display.setModel("customnpcs:customnpcalex");
         display.setSkinTexture(randomFrom(femaleSkins));
         display.setName(randomFrom(femaleNames));
