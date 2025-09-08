@@ -1,19 +1,25 @@
-var reseted = 0;
-function init(e){
+function init(e) {
+    var npc = e.npc;
+    npc.say("hi");
 
-  var npc= e.npc;
-  npc.say("hi");
+    // If not set before, initialize
+    if (!npc.storeddata.has("reseted")) {
+        npc.storeddata.put("reseted", 0);
+    }
 
-  if(npc.getFaction().getId()==15 && reseted==0){
-   npc.reset();
-   npc.say("reseted");
-   reseted=1;
-  }
-  if(npc.getFaction().getId()==15 && reseted==1){
-   var pos=npc.getPos();
-   npc.world.spawnClone(pos.getX(), pos.getY(), pos.getZ(), 3, "CitizenPolice");
-  npc.say("daspawn");
-   npc.despawn();
- 
-  }
+    var reseted = npc.storeddata.get("reseted");
+
+    if (npc.getFaction().getId() == 15 && reseted == 0) {
+
+        npc.say("reseted");
+
+        npc.storeddata.put("reseted", 1); // store persistently
+        npc.reset();
+    } 
+    else if (npc.getFaction().getId() == 15 && reseted == 1) {
+        var pos = npc.getPos();
+        npc.getWorld().spawnClone(pos.getX(), pos.getY(), pos.getZ(), 3, "CitizenPolice");
+        npc.say("despawn");
+        npc.despawn();
+    }
 }
