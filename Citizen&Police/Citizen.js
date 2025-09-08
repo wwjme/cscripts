@@ -10,6 +10,10 @@ function init(e) {
         display.setSkinTexture("cyberpunkskins:textures/lcpd.png");
         display.setName("LCPD");
         npc.getAi().setRetaliateType(0);
+
+        var gun = npc.world.createItem("tacz:modern_kinetic_gun",1);
+        gun.getNbt().putString("GunId","cyber_armorer:ajax");
+        npc.setMainhandItem(gun);
         return;
     }
 
