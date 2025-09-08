@@ -6,7 +6,7 @@ function init(e) {
     npc.setFaction(17);
     npc.getAi().setAvoidsWater(true);
 
-    if (Math.random() < 0.16) {
+    if (Math.random() < 0.11) {
         display.setSkinTexture("cyberpunkskins:textures/lcpd.png");
         display.setName("LCPD");
         npc.getAi().setRetaliateType(0);
@@ -14,6 +14,13 @@ function init(e) {
         var gun = npc.world.createItem("tacz:modern_kinetic_gun",1);
         gun.getNbt().putString("GunId","cyber_armorer:ajax");
         npc.setMainhandItem(gun);
+        npc.getInventory().setProjectile(npc.world.createItem("minecraft:gold_nugget",1));
+        npc.getStats().setMaxHealth(100);
+        npc.getStats().getRanged().setStrength(8);
+        npc.getStats().getRanged().setAccuracy(80);
+        npc.getStats().getRanged().setRange(100);
+        npc.getStats().setAggroRange(100);
+
         return;
     }
 
