@@ -22,6 +22,8 @@ function init(e) {
         npc.getStats().getRanged().setRange(100);
         npc.getStats().getRanged().setDelay(1,1);
         npc.getStats().getRanged().setBurstDelay(1);
+        npc.getStats().getRanged().setHasGravity(false);
+        npc.getStats().getRanged().setSpeed(40);
         npc.getStats().setAggroRange(100);
         npc.getStats().getRanged().setSound(0,"customnpcs:gun.pistol.shot");
         npc.getStats().getRanged().setSound(1,"");
