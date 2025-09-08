@@ -47,7 +47,7 @@ function init(e) {
             "Harvey", "Eugene", "Casey", "Shane", "Colby", "Grant", "Warren", "Russell",
             "Dwight", "Byron", "Gilbert", "Leon", "Maurice", "Ivan", "Felix", "Alfred"
         ];
-        npc.getAi().setRetaliateType(0);
+        npc.getAi().setRetaliateType(1);
         display.setSkinTexture(randomFrom(maleSkins));
         display.setName(randomFrom(maleNames));
 
@@ -80,7 +80,7 @@ function init(e) {
             "Crystal", "Fiona", "Joanna", "Sylvia", "Miriam", "Elise", "Lila", "Cecilia",
             "Miranda", "Noelle", "Priscilla", "Iris", "Angela", "Diana", "Paulina", "Renee"
         ];
-        npc.getAi().setRetaliateType(0);
+        npc.getAi().setRetaliateType(1);
         display.setModel("customnpcs:customnpcalex");
         display.setSkinTexture(randomFrom(femaleSkins));
         display.setName(randomFrom(femaleNames));
