@@ -12,7 +12,8 @@ function init(e){
   if(npc.getFaction().getId()==15 && reseted==1){
    var pos=npc.getPos();
    npc.world.spawnClone(pos.getX(), pos.getY(), pos.getZ(), 3, "CitizenPolice");
+  npc.say("daspawn");
    npc.despawn();
-   npc.say("daspawn");
+ 
   }
 }
