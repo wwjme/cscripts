@@ -3,10 +3,16 @@ function init(e) {
     var display = npc.getDisplay();
     npc.getAi().setRetaliateType(1);
     // --- Citizen faction ---
-    npc.setFaction(15);
+    npc.setFaction(17);
     npc.getAi().setAvoidsWater(true);
     // Male or female (50/50)
     var isMale = Math.random() < 0.5;
+
+    if (Math.random() < 0.16) {
+        display.setSkinTexture("cyberpunkskins:textures/lcpd.png");
+        display.setName("LCPD");
+        return;
+    }
 
     if (isMale) {
         // Generate skins b01 → b34
