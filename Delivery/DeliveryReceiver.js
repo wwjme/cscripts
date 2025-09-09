@@ -126,7 +126,10 @@ function interact(event) {
         try {
             var required = player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[GRID_SIZE]));
             if (itemsEqualStrict(api, handItem, required)) {
-                player.removeItem(required, 1); // remove 1 key, regardless of stack size
+                var removeOne = player.world.createItemFromNbt(required.getItemNbt());
+                removeOne.setStackSize(1); // only take one key
+                player.removeItem(removeOne, 1);
+
                 pdata.put("canGetPackage", 1);
                 for (var i = 0; i < GRID_SIZE; i++) {
                     if (storedSlotItems[i]) {
@@ -147,7 +150,10 @@ function interact(event) {
         try {
             var requiredB = player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsB[GRID_SIZE]));
             if (itemsEqualStrict(api, handItem, requiredB)) {
-                player.removeItem(requiredB, 1); // remove 1 key, regardless of stack size
+                var removeOneB = player.world.createItemFromNbt(requiredB.getItemNbt());
+                removeOneB.setStackSize(1); // only take one key
+                player.removeItem(removeOneB, 1);
+
                 pdata.put("canGetPackage", 1);
                 for (var j = 0; j < GRID_SIZE; j++) {
                     if (storedSlotItemsB[j]) {
