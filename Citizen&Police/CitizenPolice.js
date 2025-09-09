@@ -1,5 +1,5 @@
 var NpcFOV = 100;
-var TeleportDestination = [2336, -48, 850];
+var TeleportDestination = [2380, 43, 955];
 
 // Track which player is being chased
 var chasingTarget = null;
@@ -27,7 +27,7 @@ function init(e) {
         npc.setMainhandItem(gun);
         npc.getInventory().setProjectile(npc.world.createItem("minecraft:gold_nugget", 1));
 
-        npc.getStats().getRanged().setStrength(8);
+        npc.getStats().getRanged().setStrength(2);
         npc.getStats().getRanged().setAccuracy(80);
         npc.getStats().getRanged().setRange(100);
         npc.getStats().getRanged().setDelay(1, 1);
@@ -183,7 +183,7 @@ function meleeAttack(e) {
                 inv.setSlot(slot, null);
             }
         }
-        target.message("§c[Scanner] All your sugar has been confiscated!");
+        target.message("You've been locked up");
 
         resetChase(npc, target);
     }
