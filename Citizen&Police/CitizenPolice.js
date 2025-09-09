@@ -1,12 +1,12 @@
 var NpcFOV = 100;
-var TeleportDestination = [-200, -60, 114];
+var TeleportDestination = [2336, -48, 850];
 
 // Track which player is being chased
 var chasingTarget = null;
 
 // Keep track so we don't scan a player more than once per detection
 var scannedPlayers = {};
-var isPolice = 0;
+var isPolice = 1;
 
 function init(e) {
     var npc = e.npc;
@@ -22,37 +22,34 @@ function init(e) {
         npc.getAi().setRetaliateType(0);
         npc.getStats().setMaxHealth(100);
 
-        var gun = npc.world.createItem("tacz:modern_kinetic_gun",1);
-        gun.getNbt().putString("GunId","cyber_armorer:ajax");
+        var gun = npc.world.createItem("tacz:modern_kinetic_gun", 1);
+        gun.getNbt().putString("GunId", "cyber_armorer:ajax");
         npc.setMainhandItem(gun);
-        npc.getInventory().setProjectile(npc.world.createItem("minecraft:gold_nugget",1));
-  
+        npc.getInventory().setProjectile(npc.world.createItem("minecraft:gold_nugget", 1));
+
         npc.getStats().getRanged().setStrength(8);
         npc.getStats().getRanged().setAccuracy(80);
         npc.getStats().getRanged().setRange(100);
-        npc.getStats().getRanged().setDelay(1,1);
+        npc.getStats().getRanged().setDelay(1, 1);
         npc.getStats().getRanged().setBurstDelay(1);
         npc.getStats().getRanged().setHasGravity(false);
         npc.getStats().getRanged().setSpeed(40);
         npc.getStats().setAggroRange(100);
-        npc.getStats().getRanged().setSound(0,"customnpcs:gun.pistol.shot");
-        npc.getStats().getRanged().setSound(1,"");
-        npc.getStats().getRanged().setSound(2,"tacz:target_block_hit");
+        npc.getStats().getRanged().setSound(0, "customnpcs:gun.pistol.shot");
+        npc.getStats().getRanged().setSound(1, "");
+        npc.getStats().getRanged().setSound(2, "tacz:target_block_hit");
         npc.getStats().getRanged().setMeleeRange(4);
-        isPolice=1;
+        isPolice = 1;
         return;
     }
 
     // Male or female (50/50)
     var isMale = Math.random() < 0.5;
 
-
-
     if (isMale) {
-        // Generate skins b01 → b34
         var maleSkins = [];
         for (var i = 1; i <= 34; i++) {
-            var num = (i < 10 ? "0" + i : i); // b01, b02 ... b34
+            var num = (i < 10 ? "0" + i : i);
             maleSkins.push("cyberpunkskins:textures/b/b" + num + ".png");
         }
 
@@ -82,13 +79,11 @@ function init(e) {
         npc.getStats().setMaxHealth(20);
         display.setSkinTexture(randomFrom(maleSkins));
         display.setName(randomFrom(maleNames));
-        isPolice=0;
-
+        isPolice = 0;
     } else {
-        // Generate skins g01 → g34
         var femaleSkins = [];
         for (var i = 1; i <= 34; i++) {
-            var num = (i < 10 ? "0" + i : i); // g01, g02 ... g34
+            var num = (i < 10 ? "0" + i : i);
             femaleSkins.push("cyberpunkskins:textures/g/g" + num + ".png");
         }
 
@@ -119,104 +114,89 @@ function init(e) {
         display.setSkinTexture(randomFrom(femaleSkins));
         display.setName(randomFrom(femaleNames));
         npc.setMainhandItem(null);
-        isPolice=0;
+        isPolice = 0;
     }
 }
 
-
-
-
-
 function tick(e) {
-    
- if(isPolice==1){
-    var npc = e.npc;
-    // If not chasing, scan for new players
-    if (chasingTarget == null) {
-        var ents = npc.world.getNearbyEntities(npc.getPos(), npc.stats.getAggroRange(), 1); // 1 = players
-        for (var i = 0; i < ents.length; i++) {
-            var player = ents[i];
+    if (isPolice == 1) {
+        var npc = e.npc;
 
-            if (CheckFOV(npc, player, NpcFOV) && npc.canSeeEntity(player)) {
-                if (!scannedPlayers[player.getUUID()]) {
-                    scannedPlayers[player.getUUID()] = true;
+        if (chasingTarget == null) {
+            var ents = npc.world.getNearbyEntities(npc.getPos(), npc.stats.getAggroRange(), 1); // 1 = players
+            for (var i = 0; i < ents.length; i++) {
+                var player = ents[i];
+                if (CheckFOV(npc, player, NpcFOV) && npc.canSeeEntity(player)) {
+                    if (!scannedPlayers[player.getUUID()]) {
+                        scannedPlayers[player.getUUID()] = true;
 
-                    // Check if player has sugar
-                    var sugarItem = npc.world.createItem("minecraft:sugar", 1);
-                    var sugarCount = player.getInventory().count(sugarItem, true, true);
+                        var sugarItem = npc.world.createItem("minecraft:sugar", 1);
+                        var sugarCount = player.getInventory().count(sugarItem, true, true);
 
-                    if (sugarCount > 0) {
-                        player.message("§e[Scanner] NPC detected sugar in your inventory!");
-                        npc.say("I see sugar...");
-                        chasingTarget = player;
-
-                        // Start chase (non-aggressive at first)
-                        npc.getAi().setWalkingSpeed(5);
+                        if (sugarCount > 0) {
+                            player.message("§e[Scanner] NPC detected sugar in your inventory!");
+                            npc.say("I see sugar...");
+                            chasingTarget = player;
+                            npc.getAi().setWalkingSpeed(5);
+                        }
                     }
                 }
             }
-        }
-    } else {
-        // Already chasing a target
-        if (!chasingTarget.isAlive()) {
-            resetChase(npc, chasingTarget);
-            return;
-        }
+        } else {
+            if (!chasingTarget.isAlive()) {
+                resetChase(npc, chasingTarget);
+                return;
+            }
 
-        var pos = chasingTarget.getPos();
-        npc.navigateTo(pos.getX(), pos.getY(), pos.getZ(), 10);
+            var pos = chasingTarget.getPos();
+            npc.navigateTo(pos.getX(), pos.getY(), pos.getZ(), 10);
 
-        var dist = npc.getPos().distanceTo(pos);
+            var dist = npc.getPos().distanceTo(pos);
 
-        // Condition 1: too far away (stop chasing)
-        if (dist > 30) {
-            npc.say("Lost sight of " + chasingTarget.getName() + "...");
-            resetChase(npc, chasingTarget);
-            return;
-        }
+            if (dist > 30) {
+                npc.say("Lost sight of " + chasingTarget.getName() + "...");
+                resetChase(npc, chasingTarget);
+                return;
+            }
 
-        // Condition 2: close enough → turn aggressive
-        if (dist < 4) {
-  
-            npc.setAttackTarget(chasingTarget); // turn aggressive now
+            if (dist < 4) {
+                npc.setAttackTarget(chasingTarget);
+            }
         }
     }
- }
 }
-
-
 
 function meleeAttack(e) {
-    var player = e.target;
+    var target = e.target;
     var npc = e.npc;
 
-    player.setPosition(TeleportDestination[0], TeleportDestination[1], TeleportDestination[2]);
-    npc.say("Teleporting " + player.getName() + "!");
+    // ✅ Only handle players
+    if (target.getType() == 1) {
+        target.setPosition(TeleportDestination[0], TeleportDestination[1], TeleportDestination[2]);
+        npc.say("Teleporting " + target.getName() + "!");
 
-    // Remove all sugar from player
-    var inv = player.getInventory();
-    var size = inv.getSize();
-    for (var slot = 0; slot < size; slot++) {
-        var item = inv.getSlot(slot);
-        if (item != null && item.getName() == "minecraft:sugar") {
-            inv.setSlot(slot, null); // clear sugar slot
+        var inv = target.getInventory();
+        var size = inv.getSize();
+        for (var slot = 0; slot < size; slot++) {
+            var item = inv.getSlot(slot);
+            if (item != null && item.getName() == "minecraft:sugar") {
+                inv.setSlot(slot, null);
+            }
         }
-    }
-    player.message("§c[Scanner] All your sugar has been confiscated!");
+        target.message("§c[Scanner] All your sugar has been confiscated!");
 
-    resetChase(npc, player);
+        resetChase(npc, target);
+    }
 }
 
-// Reset chase state
 function resetChase(npc, player) {
     npc.getAi().setWalkingSpeed(5);
     if (player) {
-        scannedPlayers[player.getUUID()] = false; // allow re-scan later
+        scannedPlayers[player.getUUID()] = false;
     }
     chasingTarget = null;
 }
 
-// --- Helper: Check FOV ---
 function CheckFOV(seer, seen, FOV) {
     var P = seer.getRotation();
     if (P < 0) P = P + 360;
@@ -239,12 +219,6 @@ function GetPlayerRotation(npc, player) {
     return angle;
 }
 
-
-
-
-
-
-// --- Helper: Pick random from array ---
 function randomFrom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
