@@ -140,8 +140,7 @@ function tick(e) {
                         var sugarCount = player.getInventory().count(sugarItem, true, true);
 
                         if (sugarCount > 0) {
-                            player.message("§e[Scanner] NPC detected sugar in your inventory!");
-                            npc.say("I see sugar...");
+                            player.message("§e[Scanner] Police detected sugar on you!");
                             playerSugar[uuid] = true; // per-player sugar flag
                             chasingTarget = player;
                             npc.getAi().setWalkingSpeed(5);
