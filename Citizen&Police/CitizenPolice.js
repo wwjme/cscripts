@@ -170,7 +170,7 @@ function meleeAttack(e) {
     var target = e.target;
     var npc = e.npc;
 
-    // ✅ Only handle players
+    //  Only handle players
     if (target.getType() == 1) {
         target.setPosition(TeleportDestination[0], TeleportDestination[1], TeleportDestination[2]);
         npc.say("Teleporting " + target.getName() + "!");
