@@ -48,16 +48,64 @@ function init(e) {
     e.npc.getAi().setStandingType(2);
 }
 
-// Compare items strictly (id + damage + NBT), ignoring stack size
+// Helper: normalize NBT JSON string for comparison by removing Count entries
+function normalizeNbtJson(str){
+    if(!str) return "";
+    try {
+        // remove occurrences like "Count":1 or "Count":1b (case-insensitive 'b')
+        return str.replace(/"Count"\s*:\s*[\d]+[bB]?/g, "").replace(/\s+/g, "");
+    } catch(e){
+        return str;
+    }
+}
+
+// Compare items strictly (id + damage + NBT) but IGNORE Count in NBT so stacks match
 function itemsEqualStrict(api, hand, required) {
     if (!hand || !required) return false;
     if (hand.getName() !== required.getName()) return false;
     if (hand.getItemDamage() !== required.getItemDamage()) return false;
     try {
-        var hNbt = hand.getItemNbt().toJsonString();
-        var rNbt = required.getItemNbt().toJsonString();
-        return hNbt === rNbt;
+        var hNbt = hand.getItemNbt() ? hand.getItemNbt().toJsonString() : "";
+        var rNbt = required.getItemNbt() ? required.getItemNbt().toJsonString() : "";
+        return normalizeNbtJson(hNbt) === normalizeNbtJson(rNbt);
     } catch(e) { return false; }
+}
+
+// Match inventory item (IItemStack) to required (IItemStack) ignoring Count
+function inventorySlotMatches(slotItem, required){
+    if(!slotItem || !required) return false;
+    if (slotItem.getName() !== required.getName()) return false;
+    if (slotItem.getItemDamage() !== required.getItemDamage()) return false;
+    try {
+        var sNbt = slotItem.getItemNbt() ? slotItem.getItemNbt().toJsonString() : "";
+        var rNbt = required.getItemNbt() ? required.getItemNbt().toJsonString() : "";
+        return normalizeNbtJson(sNbt) === normalizeNbtJson(rNbt);
+    } catch(e){
+        return false;
+    }
+}
+
+// Remove exactly one matching item from player's inventory (honors NBT & damage & id)
+function removeOneMatchingFromInventory(player, required){
+    try {
+        var invWrapper = player.getInventory();
+        var items = invWrapper.getItems(); // array
+        for (var i = 0; i < items.length; i++){
+            var s = items[i];
+            if (!s || s.isEmpty()) continue;
+            if (inventorySlotMatches(s, required)){
+                var newSize = s.getStackSize() - 1;
+                if (newSize > 0){
+                    s.setStackSize(newSize);
+                } else {
+                    // clear this slot
+                    invWrapper.setSlot(i, null);
+                }
+                return true;
+            }
+        }
+    } catch(e){}
+    return false;
 }
 
 // Helper: map a mySlots index to its visual position
@@ -82,7 +130,20 @@ function interact(event) {
     var npcData = lastNpc.getStoreddata();
 
     // --- LOAD STORAGE ---
-    // Original set
+    // Backwards-compat: if old "SlotItems" exists and SlotItemsB/A don't, keep old data as original set
+    if (npcData.has("SlotItems") && !npcData.has("SlotItemsB")) {
+        try {
+            var oldData = JSON.parse(npcData.get("SlotItems"));
+            if (oldData && oldData.length > 0) {
+                storedSlotItems = oldData.slice(0); // copy
+                npcData.put("SlotItems", JSON.stringify(storedSlotItems)); // ensure stored
+            }
+        } catch(e) {
+            // ignore
+        }
+    }
+
+    // Original set (SlotItems)
     if (npcData.has("SlotItems")) {
         try {
             storedSlotItems = JSON.parse(npcData.get("SlotItems"));
@@ -100,7 +161,7 @@ function interact(event) {
         storedSlotItems = makeNullArray(STORAGE_SIZE);
     }
 
-    // New set B
+    // New set B (SlotItemsB)
     if (npcData.has("SlotItemsB")) {
         try {
             storedSlotItemsB = JSON.parse(npcData.get("SlotItemsB"));
@@ -126,9 +187,12 @@ function interact(event) {
         try {
             var required = player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[GRID_SIZE]));
             if (itemsEqualStrict(api, handItem, required)) {
-                var removeOne = player.world.createItemFromNbt(required.getItemNbt());
-                removeOne.setStackSize(1); // only take one key
-                player.removeItem(removeOne, 1);
+                // remove exactly one matching key from player's inventory (works if hand stack >1)
+                var removed = removeOneMatchingFromInventory(player, required);
+                if (!removed) {
+                    // fallback: try player.removeItem(required,1) as last resort
+                    try { player.removeItem(required, 1); } catch(e){}
+                }
 
                 pdata.put("canGetPackage", 1);
                 for (var i = 0; i < GRID_SIZE; i++) {
@@ -150,9 +214,10 @@ function interact(event) {
         try {
             var requiredB = player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsB[GRID_SIZE]));
             if (itemsEqualStrict(api, handItem, requiredB)) {
-                var removeOneB = player.world.createItemFromNbt(requiredB.getItemNbt());
-                removeOneB.setStackSize(1); // only take one key
-                player.removeItem(removeOneB, 1);
+                var removedB = removeOneMatchingFromInventory(player, requiredB);
+                if (!removedB) {
+                    try { player.removeItem(requiredB, 1); } catch(e){}
+                }
 
                 pdata.put("canGetPackage", 1);
                 for (var j = 0; j < GRID_SIZE; j++) {
@@ -294,6 +359,6 @@ function customGuiClosed(event) {
         } catch(e) { toSaveB[j] = null; }
     }
 
-    lastNpc.getStoreddata().put("SlotItems", JSON.stringify(toSave));   // original
+    lastNpc.getStoreddata().put("SlotItems", JSON.stringify(toSave));   // original (backward compat)
     lastNpc.getStoreddata().put("SlotItemsB", JSON.stringify(toSaveB)); // new
 }
