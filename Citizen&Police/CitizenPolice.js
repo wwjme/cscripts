@@ -1,11 +1,15 @@
 var NpcFOV = 100;
 var TeleportDestination = [2380, 43, 955];
 
-// Track which player is being chased
+// Track which player is being chased (entity)
 var chasingTarget = null;
-var hasSugar = null;
+
+// Track sugar state per player UUID
+var playerSugar = {}; // uuid -> true/undefined
+
 // Keep track so we don't scan a player more than once per detection
-var scannedPlayers = {};
+var scannedPlayers = {}; // uuid -> true
+
 var isPolice = 1;
 
 function init(e) {
@@ -54,25 +58,25 @@ function init(e) {
         }
 
         var maleNames = [
-            "John", "Michael", "David", "Chris", "Daniel", "Alex", "Robert", "James",
-            "William", "Joseph", "Anthony", "Mark", "Matthew", "Andrew", "Joshua", "Brian",
-            "Kevin", "Jason", "Justin", "Ryan", "Brandon", "Jacob", "Nicholas", "Eric",
-            "Jonathan", "Stephen", "Larry", "Scott", "Frank", "Tyler", "Dennis", "Jerry",
-            "Aaron", "Adam", "Patrick", "Sean", "Zachary", "Nathan", "Samuel", "Kyle",
-            "Benjamin", "Paul", "Ethan", "Gregory", "Jordan", "Cameron", "Dylan", "Hunter",
-            "Logan", "Adrian", "Connor", "Evan", "Tristan", "Austin", "Shawn", "Colton",
-            "Owen", "Landon", "Chad", "Trevor", "Spencer", "Marcus", "Vincent", "Bradley",
-            "Peter", "George", "Louis", "Arthur", "Maxwell", "Dean", "Curtis", "Phillip",
-            "Craig", "Douglas", "Raymond", "Mitchell", "Derek", "Edwin", "Jonah", "Brady",
-            "Cody", "Dustin", "Blake", "Wesley", "Henry", "Oscar", "Malcolm", "Clifford",
-            "Harold", "Howard", "Bruce", "Victor", "Jeffrey", "Allen", "Caleb", "Gordon",
-            "Neil", "Stuart", "Elliot", "Curt", "Terrence", "Leonard", "Louis", "Randall",
-            "Edgar", "Marshall", "Frederick", "Phillip", "Stanley", "Norman", "Wayne", "Glen",
-            "Elijah", "Hudson", "Bryce", "Troy", "Keith", "Melvin", "Ralph", "Jared",
-            "Joey", "Dominic", "Marco", "Angelo", "Ricky", "Darren", "Clinton", "Damian",
-            "Luther", "Francis", "Hugh", "Julian", "Quentin", "Theo", "Silas", "Earl",
-            "Harvey", "Eugene", "Casey", "Shane", "Colby", "Grant", "Warren", "Russell",
-            "Dwight", "Byron", "Gilbert", "Leon", "Maurice", "Ivan", "Felix", "Alfred"
+            "John","Michael","David","Chris","Daniel","Alex","Robert","James",
+            "William","Joseph","Anthony","Mark","Matthew","Andrew","Joshua","Brian",
+            "Kevin","Jason","Justin","Ryan","Brandon","Jacob","Nicholas","Eric",
+            "Jonathan","Stephen","Larry","Scott","Frank","Tyler","Dennis","Jerry",
+            "Aaron","Adam","Patrick","Sean","Zachary","Nathan","Samuel","Kyle",
+            "Benjamin","Paul","Ethan","Gregory","Jordan","Cameron","Dylan","Hunter",
+            "Logan","Adrian","Connor","Evan","Tristan","Austin","Shawn","Colton",
+            "Owen","Landon","Chad","Trevor","Spencer","Marcus","Vincent","Bradley",
+            "Peter","George","Louis","Arthur","Maxwell","Dean","Curtis","Phillip",
+            "Craig","Douglas","Raymond","Mitchell","Derek","Edwin","Jonah","Brady",
+            "Cody","Dustin","Blake","Wesley","Henry","Oscar","Malcolm","Clifford",
+            "Harold","Howard","Bruce","Victor","Jeffrey","Allen","Caleb","Gordon",
+            "Neil","Stuart","Elliot","Curt","Terrence","Leonard","Louis","Randall",
+            "Edgar","Marshall","Frederick","Phillip","Stanley","Norman","Wayne","Glen",
+            "Elijah","Hudson","Bryce","Troy","Keith","Melvin","Ralph","Jared",
+            "Joey","Dominic","Marco","Angelo","Ricky","Darren","Clinton","Damian",
+            "Luther","Francis","Hugh","Julian","Quentin","Theo","Silas","Earl",
+            "Harvey","Eugene","Casey","Shane","Colby","Grant","Warren","Russell",
+            "Dwight","Byron","Gilbert","Leon","Maurice","Ivan","Felix","Alfred"
         ];
         npc.getAi().setRetaliateType(1);
         npc.setMainhandItem(null);
@@ -88,25 +92,25 @@ function init(e) {
         }
 
         var femaleNames = [
-            "Sarah", "Emily", "Anna", "Sophia", "Kate", "Maria", "Laura", "Emma",
-            "Olivia", "Isabella", "Mia", "Amelia", "Charlotte", "Harper", "Evelyn", "Abigail",
-            "Ella", "Grace", "Chloe", "Victoria", "Natalie", "Hannah", "Lily", "Zoe",
-            "Samantha", "Leah", "Stella", "Claire", "Audrey", "Savannah", "Brooklyn", "Bella",
-            "Lucy", "Avery", "Scarlett", "Aria", "Ellie", "Maya", "Sofia", "Layla",
-            "Nora", "Riley", "Hazel", "Aurora", "Violet", "Penelope", "Lillian", "Naomi",
-            "Allison", "Madison", "Eleanor", "Paisley", "Camila", "Genesis", "Peyton", "Hailey",
-            "Mackenzie", "Skylar", "Kylie", "Alexis", "Autumn", "Eva", "Bailey", "Cora",
-            "Jasmine", "Serenity", "Faith", "Trinity", "Makayla", "Gianna", "Sadie", "Alexa",
-            "Katherine", "Piper", "Reagan", "Valeria", "Elena", "Clara", "Vivian", "Julia",
-            "Lydia", "Isla", "Athena", "Aubrey", "Addison", "Camille", "Rose", "Margaret",
-            "Adeline", "Alice", "Eliana", "Valentina", "Willow", "Paislee", "Rylee", "Juliana",
-            "Mariah", "Adrianna", "Josephine", "Delilah", "Gabriella", "Emilia", "Daisy", "Arabella",
-            "Melody", "Summer", "Dakota", "Harmony", "Kinsley", "Parker", "Tessa", "Freya",
-            "Eden", "Hope", "Morgan", "Nicole", "Rebecca", "Rachel", "Vanessa", "Amber",
-            "Bianca", "Chelsea", "Whitney", "Heidi", "Jade", "Ivy", "Phoebe", "Danielle",
-            "Molly", "Amberly", "Kayla", "Gloria", "Lola", "Anastasia", "Esme", "Megan",
-            "Crystal", "Fiona", "Joanna", "Sylvia", "Miriam", "Elise", "Lila", "Cecilia",
-            "Miranda", "Noelle", "Priscilla", "Iris", "Angela", "Diana", "Paulina", "Renee"
+            "Sarah","Emily","Anna","Sophia","Kate","Maria","Laura","Emma",
+            "Olivia","Isabella","Mia","Amelia","Charlotte","Harper","Evelyn","Abigail",
+            "Ella","Grace","Chloe","Victoria","Natalie","Hannah","Lily","Zoe",
+            "Samantha","Leah","Stella","Claire","Audrey","Savannah","Brooklyn","Bella",
+            "Lucy","Avery","Scarlett","Aria","Ellie","Maya","Sofia","Layla",
+            "Nora","Riley","Hazel","Aurora","Violet","Penelope","Lillian","Naomi",
+            "Allison","Madison","Eleanor","Paisley","Camila","Genesis","Peyton","Hailey",
+            "Mackenzie","Skylar","Kylie","Alexis","Autumn","Eva","Bailey","Cora",
+            "Jasmine","Serenity","Faith","Trinity","Makayla","Gianna","Sadie","Alexa",
+            "Katherine","Piper","Reagan","Valeria","Elena","Clara","Vivian","Julia",
+            "Lydia","Isla","Athena","Aubrey","Addison","Camille","Rose","Margaret",
+            "Adeline","Alice","Eliana","Valentina","Willow","Paislee","Rylee","Juliana",
+            "Mariah","Adrianna","Josephine","Delilah","Gabriella","Emilia","Daisy","Arabella",
+            "Melody","Summer","Dakota","Harmony","Kinsley","Parker","Tessa","Freya",
+            "Eden","Hope","Morgan","Nicole","Rebecca","Rachel","Vanessa","Amber",
+            "Bianca","Chelsea","Whitney","Heidi","Jade","Ivy","Phoebe","Danielle",
+            "Molly","Amberly","Kayla","Gloria","Lola","Anastasia","Esme","Megan",
+            "Crystal","Fiona","Joanna","Sylvia","Miriam","Elise","Lila","Cecilia",
+            "Miranda","Noelle","Priscilla","Iris","Angela","Diana","Paulina","Renee"
         ];
         npc.getAi().setRetaliateType(1);
         npc.getStats().setMaxHealth(20);
@@ -127,8 +131,10 @@ function tick(e) {
             for (var i = 0; i < ents.length; i++) {
                 var player = ents[i];
                 if (CheckFOV(npc, player, NpcFOV) && npc.canSeeEntity(player)) {
-                    if (!scannedPlayers[player.getUUID()]) {
-                        scannedPlayers[player.getUUID()] = true;
+                    var uuid = player.getUUID();
+                    if (!scannedPlayers[uuid]) {
+                        // mark scanned so we don't rescan immediately
+                        scannedPlayers[uuid] = true;
 
                         var sugarItem = npc.world.createItem("minecraft:sugar", 1);
                         var sugarCount = player.getInventory().count(sugarItem, true, true);
@@ -136,14 +142,18 @@ function tick(e) {
                         if (sugarCount > 0) {
                             player.message("§e[Scanner] NPC detected sugar in your inventory!");
                             npc.say("I see sugar...");
-                            hasSugar = 1;
+                            playerSugar[uuid] = true; // per-player sugar flag
                             chasingTarget = player;
                             npc.getAi().setWalkingSpeed(5);
+                        } else {
+                            // if no sugar, allow future re-scan by removing the scanned mark
+                            delete scannedPlayers[uuid];
                         }
                     }
                 }
             }
         } else {
+            // Already have a chasing target
             if (!chasingTarget.isAlive()) {
                 resetChase(npc, chasingTarget);
                 return;
@@ -161,6 +171,7 @@ function tick(e) {
             }
 
             if (dist < 4) {
+                // turn aggressive now
                 npc.setAttackTarget(chasingTarget);
             }
         }
@@ -171,31 +182,37 @@ function meleeAttack(e) {
     var target = e.target;
     var npc = e.npc;
 
-    //  Only handle players
-    if (target.getType() == 1 && hasSugar == 1) {
-        target.setPosition(TeleportDestination[0], TeleportDestination[1], TeleportDestination[2]);
-        npc.say("Teleporting " + target.getName() + "!");
+    // Only handle players and only if that player had sugar flagged
+    if (target.getType() == 1) {
+        var uuid = target.getUUID();
+        if (playerSugar[uuid]) {
+            target.setPosition(TeleportDestination[0], TeleportDestination[1], TeleportDestination[2]);
+            npc.say("Teleporting " + target.getName() + "!");
 
-        var inv = target.getInventory();
-        var size = inv.getSize();
-        for (var slot = 0; slot < size; slot++) {
-            var item = inv.getSlot(slot);
-            if (item != null && item.getName() == "minecraft:sugar") {
-                inv.setSlot(slot, null);
+            var inv = target.getInventory();
+            var size = inv.getSize();
+            for (var slot = 0; slot < size; slot++) {
+                var item = inv.getSlot(slot);
+                if (item != null && item.getName() == "minecraft:sugar") {
+                    inv.setSlot(slot, null);
+                }
             }
-        }
-        target.message("You've been locked up");
+            target.message("You've been locked up");
 
-        resetChase(npc, target);
+            // Clear player-specific state and reset NPC chase
+            resetChase(npc, target);
+        }
     }
 }
 
 function resetChase(npc, player) {
     npc.getAi().setWalkingSpeed(5);
     if (player) {
-        scannedPlayers[player.getUUID()] = false;
+        var uuid = player.getUUID();
+        // remove scanned and sugar flags so the player can be detected again next time
+        delete scannedPlayers[uuid];
+        delete playerSugar[uuid];
     }
-    hasSugar = 0;
     chasingTarget = null;
 }
 
