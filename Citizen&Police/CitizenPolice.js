@@ -169,9 +169,13 @@ function tick(e) {
 function meleeAttack(e) {
     var target = e.target;
     var npc = e.npc;
+    var pdata = target.getStoreddata();
 
     //  Only handle players
-    if (target.getType() == 1) {
+    if (target.getType() == 1 && (
+        (target.getStoreddata().has("canGetPackage") && target.getStoreddata().get("canGetPackage") == 0) ||
+        !target.getStoreddata().has("canGetPackage")
+    )) {
         target.setPosition(TeleportDestination[0], TeleportDestination[1], TeleportDestination[2]);
         npc.say("Teleporting " + target.getName() + "!");
 
