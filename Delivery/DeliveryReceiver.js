@@ -48,7 +48,7 @@ function init(e) {
     e.npc.getAi().setStandingType(2);
 }
 
-// Compare items strictly (id + damage + NBT)
+// Compare items strictly (id + damage + NBT), ignoring stack size
 function itemsEqualStrict(api, hand, required) {
     if (!hand || !required) return false;
     if (hand.getName() !== required.getName()) return false;
@@ -126,7 +126,7 @@ function interact(event) {
         try {
             var required = player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[GRID_SIZE]));
             if (itemsEqualStrict(api, handItem, required)) {
-                player.removeItem(handItem, 1);
+                player.removeItem(required, 1); // remove 1 key, regardless of stack size
                 pdata.put("canGetPackage", 1);
                 for (var i = 0; i < GRID_SIZE; i++) {
                     if (storedSlotItems[i]) {
@@ -147,7 +147,7 @@ function interact(event) {
         try {
             var requiredB = player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsB[GRID_SIZE]));
             if (itemsEqualStrict(api, handItem, requiredB)) {
-                player.removeItem(handItem, 1);
+                player.removeItem(requiredB, 1); // remove 1 key, regardless of stack size
                 pdata.put("canGetPackage", 1);
                 for (var j = 0; j < GRID_SIZE; j++) {
                     if (storedSlotItemsB[j]) {
