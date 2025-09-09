@@ -194,7 +194,7 @@ function meleeAttack(e) {
                     inv.setSlot(slot, null);
                 }
             }
-            target.message("You've been locked up");
+            target.message("§cYou've been locked up");
 
             // Clear player-specific state and reset NPC chase
             resetChase(npc, target);
