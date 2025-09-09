@@ -3,7 +3,7 @@ var TeleportDestination = [2380, 43, 955];
 
 // Track which player is being chased
 var chasingTarget = null;
-
+var hasSugar = null;
 // Keep track so we don't scan a player more than once per detection
 var scannedPlayers = {};
 var isPolice = 1;
@@ -136,6 +136,7 @@ function tick(e) {
                         if (sugarCount > 0) {
                             player.message("§e[Scanner] NPC detected sugar in your inventory!");
                             npc.say("I see sugar...");
+                            hasSugar = 1;
                             chasingTarget = player;
                             npc.getAi().setWalkingSpeed(5);
                         }
@@ -169,13 +170,9 @@ function tick(e) {
 function meleeAttack(e) {
     var target = e.target;
     var npc = e.npc;
-    var pdata = target.getStoreddata();
 
     //  Only handle players
-    if (target.getType() == 1 && (
-        (target.getStoreddata().has("canGetPackage") && target.getStoreddata().get("canGetPackage") == 0) ||
-        !target.getStoreddata().has("canGetPackage")
-    )) {
+    if (target.getType() == 1 && hasSugar == 1) {
         target.setPosition(TeleportDestination[0], TeleportDestination[1], TeleportDestination[2]);
         npc.say("Teleporting " + target.getName() + "!");
 
@@ -198,6 +195,7 @@ function resetChase(npc, player) {
     if (player) {
         scannedPlayers[player.getUUID()] = false;
     }
+    hasSugar = 0;
     chasingTarget = null;
 }
 
