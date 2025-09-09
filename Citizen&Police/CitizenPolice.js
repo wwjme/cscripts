@@ -127,7 +127,7 @@ function tick(e) {
         var npc = e.npc;
 
         if (chasingTarget == null) {
-            var ents = npc.world.getNearbyEntities(npc.getPos(), npc.stats.getAggroRange(), 1); // 1 = players
+            var ents = npc.world.getNearbyEntities(npc.getPos(), 30, 1); // 1 = players
             for (var i = 0; i < ents.length; i++) {
                 var player = ents[i];
                 if (CheckFOV(npc, player, NpcFOV) && npc.canSeeEntity(player)) {
