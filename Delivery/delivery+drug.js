@@ -5,38 +5,26 @@ var highlightLineIds = [];
 // === CONFIG ===
 var GRID_ROWS = 3;
 var GRID_COLS = 3;
-var START_X   = 60;
-var START_Y   = -100;  // top grid Y offset
+var START_X   = 60;  
+var START_Y   = -50;  
 var COL_SPACING = 20;
 var ROW_SPACING = 20;
 
-// Extra slots (keys on the left)
-var extraSlotPositionA = {x: 10, y: -50}; // top key slot
-var extraSlotPositionB = {x: 10, y: 0};   // bottom key slot
+// Key slot (extra slot on the left, last index in storage array)
+var extraSlotPosition = {x: 10, y: 0};
 
-// --- Build slot positions for grids ---
-function buildSlotPositions(offsetY){
-    var arr = [];
-    for (var row = 0; row < GRID_ROWS; row++) {
-        for (var col = 0; col < GRID_COLS; col++) {
-            arr.push({x: START_X + col * COL_SPACING, y: offsetY + row * ROW_SPACING});
-        }
+var slotPositions = [];
+for (var row = 0; row < GRID_ROWS; row++) {
+    for (var col = 0; col < GRID_COLS; col++) {
+        slotPositions.push({x: START_X + col * COL_SPACING, y: START_Y + row * ROW_SPACING});
     }
-    return arr;
 }
-
-var slotPositionsA = buildSlotPositions(START_Y);      // top rewards grid
-var slotPositionsB = buildSlotPositions(START_Y + 50); // bottom rewards grid
-
-var GRID_SIZE = slotPositionsA.length;
-var STORAGE_SIZE = GRID_SIZE + 1; // grid + key slot
-
-// storage arrays
-var storedSlotItemsA = [];
-var storedSlotItemsB = [];
+var GRID_SIZE = slotPositions.length;  
+var STORAGE_SIZE = GRID_SIZE + 1;      
 
 var highlightedSlot = null;
 var lastNpc = null;
+var storedSlotItems = []; 
 
 function makeNullArray(n){
     var a = new Array(n);
@@ -45,8 +33,8 @@ function makeNullArray(n){
 }
 
 function init(e) {
-    e.npc.setFaction(4);
-    e.npc.getAi().setStandingType(2);
+ e.npc.setFaction(4);
+ e.npc.getAi().setStandingType(2);
 }
 
 // Compare items strictly (id + damage + NBT)
@@ -64,26 +52,6 @@ function itemsEqualStrict(api, hand, required) {
     }
 }
 
-// Helper: map a mySlots index to its visual position object {x,y}
-function getSlotPositionByIndex(index) {
-    // Indices layout in mySlots:
-    // 0..G-1         -> A grid (slotPositionsA[0..G-1])
-    // G              -> extraA
-    // G+1 .. G+G     -> B grid (slotPositionsB[0..G-1])
-    // 2G+1           -> extraB
-    var G = GRID_SIZE;
-    if (index < G) {
-        return slotPositionsA[index];
-    } else if (index == G) {
-        return extraSlotPositionA;
-    } else if (index > G && index <= G + G) {
-        return slotPositionsB[index - (G + 1)];
-    } else {
-        // last slot: extraB
-        return extraSlotPositionB;
-    }
-}
-
 // ---------- INTERACT ----------
 function interact(event) {
     var player = event.player;
@@ -91,83 +59,49 @@ function interact(event) {
     lastNpc = event.npc;
     var npcData = lastNpc.getStoreddata();
 
-    // Load stored items A
-    if (npcData.has("SlotItemsA")) {
+    // Load stored items
+    if (npcData.has("SlotItems")) {
         try {
-            storedSlotItemsA = JSON.parse(npcData.get("SlotItemsA"));
-            if (!storedSlotItemsA || storedSlotItemsA.length < STORAGE_SIZE) {
+            storedSlotItems = JSON.parse(npcData.get("SlotItems"));
+            if (!storedSlotItems || storedSlotItems.length < STORAGE_SIZE) {
                 var tmp = makeNullArray(STORAGE_SIZE);
-                if (storedSlotItemsA && storedSlotItemsA.length > 0) {
-                    for (var t = 0; t < storedSlotItemsA.length && t < STORAGE_SIZE; t++) tmp[t] = storedSlotItemsA[t];
+                if (storedSlotItems && storedSlotItems.length > 0) {
+                    for (var t = 0; t < storedSlotItems.length && t < STORAGE_SIZE; t++) tmp[t] = storedSlotItems[t];
                 }
-                storedSlotItemsA = tmp;
+                storedSlotItems = tmp;
             }
         } catch(e){
-            storedSlotItemsA = makeNullArray(STORAGE_SIZE);
+            storedSlotItems = makeNullArray(STORAGE_SIZE);
         }
     } else {
-        storedSlotItemsA = makeNullArray(STORAGE_SIZE);
-    }
-
-    // Load stored items B
-    if (npcData.has("SlotItemsB")) {
-        try {
-            storedSlotItemsB = JSON.parse(npcData.get("SlotItemsB"));
-            if (!storedSlotItemsB || storedSlotItemsB.length < STORAGE_SIZE) {
-                var tmp2 = makeNullArray(STORAGE_SIZE);
-                if (storedSlotItemsB && storedSlotItemsB.length > 0) {
-                    for (var u = 0; u < storedSlotItemsB.length && u < STORAGE_SIZE; u++) tmp2[u] = storedSlotItemsB[u];
-                }
-                storedSlotItemsB = tmp2;
-            }
-        } catch(e){
-            storedSlotItemsB = makeNullArray(STORAGE_SIZE);
-        }
-    } else {
-        storedSlotItemsB = makeNullArray(STORAGE_SIZE);
+        storedSlotItems = makeNullArray(STORAGE_SIZE);
     }
 
     var handItem = player.getMainhandItem();
-    var pdata = player.getStoreddata();
 
-    // --- Check key for Set A ---
-    if (handItem && !handItem.isEmpty() && storedSlotItemsA[GRID_SIZE]) {
+    var pdata = player.getStoreddata(); //canGetPackag data
+    // --- If holding the key item -> give rewards ---
+    if (handItem && !handItem.isEmpty() && storedSlotItems[GRID_SIZE]) {
         try {
-            var requiredA = player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsA[GRID_SIZE]));
-            if (itemsEqualStrict(api, handItem, requiredA)) {
+            var required = player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[GRID_SIZE]));
+
+            var matches = itemsEqualStrict(api, handItem, required);
+
+            if (matches) {
                 player.removeItem(handItem, 1);
-                pdata.put("canGetPackage", 1);
+                pdata.put("canGetPackage", 1); 
+                // Give all rewards
                 for (var i = 0; i < GRID_SIZE; i++) {
-                    if (storedSlotItemsA[i]) {
+                    if (storedSlotItems[i]) {
                         try {
-                            var rewardA = player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsA[i]));
-                            player.giveItem(rewardA);
+                            var reward = player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[i]));
+                            player.giveItem(reward);
                         } catch(e) {}
                     }
                 }
-                player.message("§aYou Received Payment Set A!");
-                return;
-            }
-        } catch(e) {}
-    }
 
-    // --- Check key for Set B ---
-    if (handItem && !handItem.isEmpty() && storedSlotItemsB[GRID_SIZE]) {
-        try {
-            var requiredB = player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsB[GRID_SIZE]));
-            if (itemsEqualStrict(api, handItem, requiredB)) {
-                player.removeItem(handItem, 1);
-                pdata.put("canGetPackage", 1);
-                for (var j = 0; j < GRID_SIZE; j++) {
-                    if (storedSlotItemsB[j]) {
-                        try {
-                            var rewardB = player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsB[j]));
-                            player.giveItem(rewardB);
-                        } catch(e) {}
-                    }
-                }
-                player.message("§aYou Received Payment Set B!");
-                return;
+                player.message("§aYou Received A Payment!");
+                return; 
             }
         } catch(e) {}
     }
@@ -176,37 +110,28 @@ function interact(event) {
     if (handItem && !handItem.isEmpty() && handItem.getName() === "minecraft:bedrock") {
         highlightedSlot = null;
         highlightLineIds = [];
-        mySlots = [];
 
         guiRef = api.createCustomGui(176, 166, 0, true, player);
 
-        // === Render Set A ===
-        for (var iA = 0; iA < slotPositionsA.length; iA++) {
-            var slotA = guiRef.addItemSlot(slotPositionsA[iA].x, slotPositionsA[iA].y);
-            if (storedSlotItemsA[iA]) {
-                try { slotA.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsA[iA]))); } catch(e){}
+        // Create reward grid slots
+        mySlots = slotPositions.map(function(pos, i) {
+            var slot = guiRef.addItemSlot(pos.x, pos.y);
+            if (storedSlotItems[i]) {
+                try {
+                    slot.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[i])));
+                } catch(e) {}
             }
-            mySlots.push(slotA);
-        }
-        var extraA = guiRef.addItemSlot(extraSlotPositionA.x, extraSlotPositionA.y);
-        if (storedSlotItemsA[GRID_SIZE]) {
-            try { extraA.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsA[GRID_SIZE]))); } catch(e){}
-        }
-        mySlots.push(extraA);
+            return slot;
+        });
 
-        // === Render Set B ===
-        for (var iB = 0; iB < slotPositionsB.length; iB++) {
-            var slotB = guiRef.addItemSlot(slotPositionsB[iB].x, slotPositionsB[iB].y);
-            if (storedSlotItemsB[iB]) {
-                try { slotB.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsB[iB]))); } catch(e){}
-            }
-            mySlots.push(slotB);
+        // Create extra key slot
+        var extraSlot = guiRef.addItemSlot(extraSlotPosition.x, extraSlotPosition.y);
+        if (storedSlotItems[GRID_SIZE]) {
+            try {
+                extraSlot.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItems[GRID_SIZE])));
+            } catch(e) {}
         }
-        var extraB = guiRef.addItemSlot(extraSlotPositionB.x, extraSlotPositionB.y);
-        if (storedSlotItemsB[GRID_SIZE]) {
-            try { extraB.setStack(player.world.createItemFromNbt(api.stringToNbt(storedSlotItemsB[GRID_SIZE]))); } catch(e){}
-        }
-        mySlots.push(extraB);
+        mySlots.push(extraSlot);
 
         guiRef.showPlayerInventory(10, 110, false);
         player.showCustomGui(guiRef);
@@ -228,14 +153,13 @@ function customGuiSlotClicked(event) {
         }
         highlightLineIds = [];
 
-        // Determine correct pos for this slot index
-        var pos = getSlotPositionByIndex(slotIndex);
+        var pos = (slotIndex < GRID_SIZE) ? slotPositions[slotIndex] : extraSlotPosition;
         var x = pos.x, y = pos.y, w = 18, h = 18;
         highlightLineIds.push(guiRef.addColoredLine(1, x, y, x+w, y, 0xADD8E6, 2));
         highlightLineIds.push(guiRef.addColoredLine(2, x, y+h, x+w, y+h, 0xADD8E6, 2));
         highlightLineIds.push(guiRef.addColoredLine(3, x, y, x, y+h, 0xADD8E6, 2));
         highlightLineIds.push(guiRef.addColoredLine(4, x+w, y, x+w, y+h, 0xADD8E6, 2));
-        try { guiRef.update(); } catch(e) {}
+        guiRef.update();
         return;
     }
 
@@ -270,10 +194,10 @@ function customGuiSlotClicked(event) {
         } else if (slotStack && !slotStack.isEmpty()) {
             player.giveItem(slotStack);
             highlightedSlot.setStack(player.world.createItem("minecraft:air", 1));
-            try { guiRef.update(); } catch(e){}
+            guiRef.update();
         }
 
-        try { guiRef.update(); } catch(e){}
+        guiRef.update();
     } catch(e) {}
 }
 
@@ -281,25 +205,14 @@ function customGuiSlotClicked(event) {
 function customGuiClosed(event) {
     if (!lastNpc) return;
 
-    var toSaveA = makeNullArray(STORAGE_SIZE);
-    var toSaveB = makeNullArray(STORAGE_SIZE);
-
-    // First STORAGE_SIZE slots belong to A
-    for (var i = 0; i < STORAGE_SIZE; i++) {
+    var toSave = makeNullArray(STORAGE_SIZE);
+    for (var i = 0; i < mySlots.length && i < STORAGE_SIZE; i++) {
         try {
-            var stA = mySlots[i].getStack();
-            toSaveA[i] = (stA && !stA.isEmpty()) ? stA.getItemNbt().toJsonString() : null;
-        } catch(e) { toSaveA[i] = null; }
+            var st = mySlots[i].getStack();
+            toSave[i] = (st && !st.isEmpty()) ? st.getItemNbt().toJsonString() : null;
+        } catch(e) {
+            toSave[i] = null;
+        }
     }
-
-    // Next STORAGE_SIZE slots belong to B
-    for (var j = 0; j < STORAGE_SIZE; j++) {
-        try {
-            var stB = mySlots[STORAGE_SIZE + j].getStack();
-            toSaveB[j] = (stB && !stB.isEmpty()) ? stB.getItemNbt().toJsonString() : null;
-        } catch(e) { toSaveB[j] = null; }
-    }
-
-    lastNpc.getStoreddata().put("SlotItemsA", JSON.stringify(toSaveA));
-    lastNpc.getStoreddata().put("SlotItemsB", JSON.stringify(toSaveB));
+    lastNpc.getStoreddata().put("SlotItems", JSON.stringify(toSave));
 }
