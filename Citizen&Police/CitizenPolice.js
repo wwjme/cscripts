@@ -79,6 +79,7 @@ function init(e) {
             "Dwight","Byron","Gilbert","Leon","Maurice","Ivan","Felix","Alfred"
         ];
         npc.getAi().setRetaliateType(1);
+        npc.getAi().setDoorInteract(2);
         npc.setMainhandItem(null);
         npc.getStats().setMaxHealth(20);
         display.setSkinTexture(randomFrom(maleSkins));
@@ -113,6 +114,7 @@ function init(e) {
             "Miranda","Noelle","Priscilla","Iris","Angela","Diana","Paulina","Renee"
         ];
         npc.getAi().setRetaliateType(1);
+        npc.getAi().setDoorInteract(2);
         npc.getStats().setMaxHealth(20);
         display.setModel("customnpcs:customnpcalex");
         display.setSkinTexture(randomFrom(femaleSkins));
