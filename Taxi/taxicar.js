@@ -1,31 +1,51 @@
 var flightTimerId = 20;
-var despawnTimerId = 21; // new timer for 1-minute despawn
 var step = 0.9;
 var pitch, pl, rot;
 var motionX = 0, motionY = 0, motionZ = 0;
-var decay = 0.05; // momentum decay
+var decay = 0.05;
 var npcYaw = 0;
+
+// Taxi route points (expand this list as needed)
+var locations = [
+    {x:2310, y:-30, z:655},
+    {x:2380, y:40, z:1045},
+    {x:2471, y:40, z:1139}
+];
+
+// Current trip state
+var pickup = null;
+var arrival = null;
+var onPickup = true; // first step is pickup
 
 function init(event) {
     event.npc.ai.stopOnInteract = false;
     event.npc.ai.returnsHome = false;
     npcYaw = event.npc.getRotation();
-    event.npc.getStoreddata().put("hadRider", 0);
+}
+
+function assignNewTrip(npc) {
+    // Pick two distinct random locations
+    var i = Math.floor(Math.random() * locations.length);
+    var j;
+    do {
+        j = Math.floor(Math.random() * locations.length);
+    } while (j == i);
+
+    pickup = locations[i];
+    arrival = locations[j];
+    onPickup = true;
+
+    npc.getWorld().broadcast("New Pickup: ("+pickup.x+", "+pickup.y+", "+pickup.z+") Arrival: ("+arrival.x+", "+arrival.y+", "+arrival.z+")");
 }
 
 function interact(event) {
     event.npc.addRider(event.player);
-
-    // Mark that this NPC has had a rider
     event.npc.getStoreddata().put("hadRider", 1);
 
-    // Start flight control timer
+    // Start control timer
     event.npc.timers.stop(flightTimerId);
     event.npc.timers.start(flightTimerId, 1, true);
-
-    // Start despawn timer (10 sec test – change to 20*60 for 1 min)
-    event.npc.timers.stop(despawnTimerId);
-    event.npc.timers.start(despawnTimerId, 20 * 60, false);
+    assignNewTrip(event.npc);
 }
 
 function toRadians(angle) {
@@ -46,7 +66,6 @@ function timer(event) {
     var data = npc.getStoreddata();
     var hadRider = data.get("hadRider") == 1;
 
-    // ========= Flight Control =========
     if (event.id == flightTimerId) {
         var riders = npc.getRiders();
         var usingControl = false;
@@ -60,17 +79,15 @@ function timer(event) {
                 rot = Number(pl.getRotation().toFixed(2));
                 if (rot < 0) rot += 360;
 
-                // Smoothly rotate NPC toward player's yaw
                 npcYaw = lerpAngle(npcYaw, rot, 0.2);
                 npc.setRotation(npcYaw);
 
-                // Motion
                 var targetX = step * -Math.sin(toRadians(rot));
                 var targetZ = step * Math.cos(toRadians(rot));
                 var targetY = 0;
 
-                if (pitch >= 20) targetY = -step;     // look up -> move up
-                else if (pitch <= -20) targetY = step; // look down -> move down
+                if (pitch >= 20) targetY = -step;
+                else if (pitch <= -20) targetY = step;
 
                 motionX = lerp(motionX, targetX, 0.2);
                 motionY = lerp(motionY, targetY, 0.2);
@@ -88,23 +105,46 @@ function timer(event) {
         npc.setMotionY(motionY);
         npc.setMotionZ(motionZ);
 
-        // === Detect dismount ===
+        // Detect dismount
         if (hadRider && riders.length == 0) {
             npc.getWorld().spawnClone(2301, -48, 865, 6, "Whitecar");
             npc.despawn();
+            return;
         }
-    }
 
-    // ========= Despawn after timer =========
-    if (event.id == despawnTimerId && hadRider) {
-        var riders = npc.getRiders();
+        // === Trip progression ===
         if (riders.length > 0) {
-            var player = riders[0];
-            player.setMount(null);
-            player.setPosition(2301, -48, 865);
-        }
+            var target = onPickup ? pickup : arrival;
+            if (isNear(npc, target, 6)) {
+                if (onPickup) {
+                    riders[0].message("Passenger picked up.");
+                    onPickup = false;
+                } else {
+                    var dist = distance(pickup, arrival);
+                    var reward = Math.floor(dist / 10); // adjust reward formula
+                    riders[0].message("Arrived! Distance: "+dist+" blocks. Reward: "+reward);
+                    // Example: give reward item
+                    riders[0].giveItem("minecraft:emerald", reward);
 
-        npc.getWorld().spawnClone(2301, -48, 865, 6, "Whitecar");
-        npc.despawn();
+                    // Assign next trip
+                    assignNewTrip(npc);
+                }
+            }
+        }
     }
+}
+
+// === Helpers ===
+function isNear(npc, pos, radius) {
+    var dx = npc.getX() - pos.x;
+    var dy = npc.getY() - pos.y;
+    var dz = npc.getZ() - pos.z;
+    return (dx*dx + dy*dy + dz*dz) <= radius*radius;
+}
+
+function distance(a, b) {
+    var dx = a.x - b.x;
+    var dy = a.y - b.y;
+    var dz = a.z - b.z;
+    return Math.sqrt(dx*dx + dy*dy + dz*dz);
 }
