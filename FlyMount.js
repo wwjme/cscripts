@@ -10,18 +10,22 @@ function init(event) {
     event.npc.ai.stopOnInteract = false;
     event.npc.ai.returnsHome = false;
     npcYaw = event.npc.getRotation();
+    event.npc.getStoreddata().put("hadRider", 0);
 }
 
 function interact(event) {
     event.npc.addRider(event.player);
 
+    // Mark that this NPC has had a rider
+    event.npc.getStoreddata().put("hadRider", 1);
+
     // Start flight control timer
     event.npc.timers.stop(flightTimerId);
     event.npc.timers.start(flightTimerId, 1, true);
 
-    // Start despawn timer (60 seconds)
+    // Start despawn timer (10 sec test – change to 20*60 for 1 min)
     event.npc.timers.stop(despawnTimerId);
-    event.npc.timers.start(despawnTimerId, 20 * 10, false); // 20 ticks = 1 sec
+    event.npc.timers.start(despawnTimerId, 20 * 10, false);
 }
 
 function toRadians(angle) {
@@ -39,6 +43,8 @@ function lerpAngle(a, b, t) {
 
 function timer(event) {
     var npc = event.npc;
+    var data = npc.getStoreddata();
+    var hadRider = data.get("hadRider") == 1;
 
     // ========= Flight Control =========
     if (event.id == flightTimerId) {
@@ -56,7 +62,7 @@ function timer(event) {
 
                 // Smoothly rotate NPC toward player's yaw
                 npcYaw = lerpAngle(npcYaw, rot, 0.2);
-                npc.setRotation(npcYaw); // set yaw
+                npc.setRotation(npcYaw);
 
                 // Motion
                 var targetX = step * -Math.sin(toRadians(rot));
@@ -81,21 +87,23 @@ function timer(event) {
         npc.setMotionX(motionX);
         npc.setMotionY(motionY);
         npc.setMotionZ(motionZ);
+
+        // === Detect dismount ===
+        if (hadRider && riders.length == 0) {
+            npc.getWorld().spawnClone(2301, -48, 865, 6, "Whitecar");
+            npc.despawn();
+        }
     }
 
-    // ========= Despawn + Car Spawn =========
-    if (event.id == despawnTimerId) {
+    // ========= Despawn after timer =========
+    if (event.id == despawnTimerId && hadRider) {
         var riders = npc.getRiders();
-
         if (riders.length > 0) {
             var player = riders[0];
-            // Force dismount
             player.setMount(null);
-            // Teleport player before despawn
             player.setPosition(2301, -48, 865);
         }
 
-        // Spawn Whitecar and despawn current NPC
         npc.getWorld().spawnClone(2301, -48, 865, 6, "Whitecar");
         npc.despawn();
     }
