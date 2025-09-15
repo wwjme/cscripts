@@ -35,7 +35,8 @@ function assignNewTrip(npc) {
     arrival = locations[j];
     onPickup = true;
 
-    npc.getWorld().broadcast("New Pickup: ("+pickup.x+", "+pickup.y+", "+pickup.z+") Arrival: ("+arrival.x+", "+arrival.y+", "+arrival.z+")");
+npc.getWorld().broadcast("§aNew Pickup§r: ("+pickup.x+", "+pickup.y+", "+pickup.z+") " + "§aArrival§r: ("+arrival.x+", "+arrival.y+", "+arrival.z+")");
+
 }
 
 function interact(event) {
@@ -117,12 +118,12 @@ function timer(event) {
             var target = onPickup ? pickup : arrival;
             if (isNear(npc, target, 6)) {
                 if (onPickup) {
-                    riders[0].message("Passenger picked up.");
+                    riders[0].message("§aPassenger picked up.");
                     onPickup = false;
                 } else {
                     var dist = distance(pickup, arrival);
                     var reward = Math.floor(dist / 10); // adjust reward formula
-                    riders[0].message("Arrived! Distance: "+dist+" blocks. Reward: "+reward);
+                    riders[0].message("§aArrived! Distance: "+dist+" §ablocks. Reward: "+reward);
                     // Example: give reward item
                     riders[0].giveItem("minecraft:emerald", reward);
 
