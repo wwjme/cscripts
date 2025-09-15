@@ -1,6 +1,6 @@
 var flightTimerId = 20;
 var despawnTimerId = 21; // new timer for 1-minute despawn
-var step = 0.6;
+var step = 0.9;
 var pitch, pl, rot;
 var motionX = 0, motionY = 0, motionZ = 0;
 var decay = 0.05; // momentum decay
@@ -25,7 +25,7 @@ function interact(event) {
 
     // Start despawn timer (10 sec test – change to 20*60 for 1 min)
     event.npc.timers.stop(despawnTimerId);
-    event.npc.timers.start(despawnTimerId, 20 * 10, false);
+    event.npc.timers.start(despawnTimerId, 20 * 60, false);
 }
 
 function toRadians(angle) {
