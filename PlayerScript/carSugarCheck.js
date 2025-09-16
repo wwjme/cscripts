@@ -26,8 +26,8 @@ function tick(event) {
             }
         }
 
-        if (hasRestrictedItem) {
-            player.setMount(null); // force dismount
-        }
+///        if (hasRestrictedItem) {
+///            player.setMount(null); // force dismount
+ ///       }
     }
 }
