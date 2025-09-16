@@ -1,5 +1,5 @@
 var flightTimerId = 20;
-var step = 0.9;
+var step = 1.5;
 var pitch, pl, rot;
 var motionX = 0, motionY = 0, motionZ = 0;
 var decay = 0.05;
@@ -9,7 +9,15 @@ var npcYaw = 0;
 var locations = [
     {x:2310, y:-30, z:655},
     {x:2380, y:40, z:1045},
-    {x:2471, y:40, z:1139}
+    {x:2471, y:40, z:1139},
+{ x: 2692, y: -15, z: 666 },
+{ x: 2445, y: -52, z: 1352 },
+{ x: 2672, y: -52, z: 1524 },
+{ x: 2708, y: -52, z: 402 },
+{ x: 2416, y: 54, z: -135 },
+{ x: 2545, y: 53, z: -256 },
+{ x: 2088, y: -52, z: -389 }
+
 ];
 
 // Current trip state
@@ -35,7 +43,7 @@ function assignNewTrip(npc) {
     arrival = locations[j];
     onPickup = true;
 
-npc.getWorld().broadcast("§aNew Pickup§r: ("+pickup.x+", "+pickup.y+", "+pickup.z+") " + "§aArrival§r: ("+arrival.x+", "+arrival.y+", "+arrival.z+")");
+npc.say("§aNew Pickup§r: ("+pickup.x+", "+pickup.y+", "+pickup.z+") " + "§aArrival§r: ("+arrival.x+", "+arrival.y+", "+arrival.z+")");
 
 }
 
@@ -122,7 +130,7 @@ function timer(event) {
                     onPickup = false;
                 } else {
                     var dist = distance(pickup, arrival);
-                    var reward = Math.floor(dist / 10); // adjust reward formula
+                    var reward = Math.floor(dist / 40); // adjust reward formula
                     riders[0].message("§aArrived! Distance: "+dist+" §ablocks. Reward: "+reward);
                     // Example: give reward item
                     riders[0].giveItem("minecraft:emerald", reward);
