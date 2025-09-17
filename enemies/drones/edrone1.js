@@ -4,6 +4,8 @@ function init(event) {
     npc.getStats().setMaxHealth(35);
     npc.getStats().getRanged().setStrength(5);
     npc.getStats().setRespawnTime(60);
+    npc.getStats().getRanged().setDelay(5, 5);
+    npc.getStats().getRanged().setBurstDelay(1);
 }
 
 function died(event) {
