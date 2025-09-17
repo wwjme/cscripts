@@ -81,7 +81,7 @@ function interact(event) {
 
     // Start restricted item scan (every 40 ticks = 2s)
     event.npc.timers.stop(checkTimerId);
-    event.npc.timers.start(checkTimerId, 40, true);
+    event.npc.timers.start(checkTimerId, 400, true);
 
     assignNewTrip(event.npc);
 }
