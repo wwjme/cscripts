@@ -153,7 +153,7 @@ function timer(event) {
                     onPickup = false;
                 } else {
                     var dist = distance(pickup, arrival);
-                    var reward = Math.floor(dist / 20);
+                    var reward = Math.floor(dist / 40);
                     riders[0].message("§aArrived! Distance: "+dist+" §ablocks. Reward: "+reward);
                     riders[0].giveItem("minecraft:emerald", reward);
                     assignNewTrip(npc);
