@@ -9,6 +9,9 @@ function init(e){
     var item = npc.world.createItem(rewardItem, rewardCount);
     var display = npc.getDisplay();
     
+    npc.getStats().setMaxHealth(400);
+    npc.getStats().getRanged().setStrength(30);
+    
     npc.getInventory().setDropItem(1, item, 100);
 
     var isMale = Math.random() < 0.5;
