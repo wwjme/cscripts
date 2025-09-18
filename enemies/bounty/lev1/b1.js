@@ -49,7 +49,7 @@ function died(event) {
             killer.message( left + " targets remaining.");
 
             if (left <= 0) {
-                pdata.put("canDoContract", true);
+                pdata.put("canDoContract", 1);
                 killer.message("§6Contract complete! Return for a new one.");
 
             }
