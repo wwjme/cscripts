@@ -50,7 +50,7 @@ function died(event) {
 
             if (left <= 0) {
                 pdata.put("canDoContract", 1);
-                killer.message("§6Contract complete! Return for a new one.");
+                killer.message("§aContract complete! Return for a new one.");
 
             }
         }
