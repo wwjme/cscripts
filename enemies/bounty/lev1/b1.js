@@ -31,7 +31,7 @@ function init(e){
         } 
        display.setSkinTexture(randomFrom(femaleSkins));   
 }
-
+}
 
 function died(event) {
     var killer = event.source; // usually the player
