@@ -30,8 +30,9 @@ function init(e){
             femaleSkins.push("cyberpunkskins:textures/g/g" + num + ".png");   
         } 
        display.setSkinTexture(randomFrom(femaleSkins));   
+    }
 }
-}
+
 
 function died(event) {
     var killer = event.source; // usually the player
