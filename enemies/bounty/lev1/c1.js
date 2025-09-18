@@ -41,7 +41,8 @@ function interact(event) {
         pdata.put("contractKillsLeft", numTargets);
 
         // tell player
-        event.npc.say("Here is your target's location, eliminate them: ("+coord.x+", "+coord.y+", "+coord.z+")");
+        event.npc.say("Here is your target's location, eliminate them: §e(" + coord.x + ", " + coord.y + ", " + coord.z + ")§f");
+
 
         // lock until completed
         pdata.put("canDoContract", 0); // set to 0 = not eligible until finished
