@@ -40,11 +40,9 @@ function interact(event) {
         // save kill count needed
         pdata.put("contractKillsLeft", numTargets);
 
-        // tell player
-        event.npc.say("Here is your target's location, eliminate them: §e(" + coord.x + ", " + coord.y + ", " + coord.z + ")§f");
+        event.npc.say("§aHere is your target's location, eliminate them: §e(" + coord.x + ", " + coord.y + ", " + coord.z + ")§r");
 
 
-        // lock until completed
         pdata.put("canDoContract", 0); // set to 0 = not eligible until finished
     } else {
         var left = parseInt(pdata.get("contractKillsLeft"));
