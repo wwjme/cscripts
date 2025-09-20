@@ -1,8 +1,7 @@
-// --- Configurable reward ---
-// Change these values for different items/rewards
+
 var skinAvail = 34;
-var rewardItem = "minecraft:emerald";  // item ID
-var rewardCount = 5;                   // how many
+var rewardItem = "minecraft:echo_shard";  
+var rewardCount = 10;                 
 
 function init(e){
     var npc = e.npc;
@@ -10,8 +9,8 @@ function init(e){
     var display = npc.getDisplay();
     
     npc.getStats().setMaxHealth(400);
-    npc.getStats().getRanged().setStrength(30);
-    
+    npc.getStats().getRanged().setStrength(15);
+    npc.getStats().getRanged().setAccuracy(70);
     npc.getInventory().setDropItem(1, item, 100);
 
     var isMale = Math.random() < 0.5;
@@ -29,13 +28,13 @@ function init(e){
             var num = (i < 10 ? "0" + i : i);
             femaleSkins.push("cyberpunkskins:textures/g/g" + num + ".png");   
         } 
-       display.setSkinTexture(randomFrom(femaleSkins));   
+       display.setSkinTexture(randomFrom(femaleSkins));  
     }
 }
 
 
 function died(event) {
-    var killer = event.source; // usually the player
+    var killer = event.source; 
     if (killer && killer.getStoreddata) {
         var pdata = killer.getStoreddata();
         var left = pdata.get("contractKillsLeft");
