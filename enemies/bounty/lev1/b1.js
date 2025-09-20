@@ -9,7 +9,7 @@ function init(e){
     var display = npc.getDisplay();
     
     npc.getStats().setMaxHealth(400);
-    npc.getStats().getRanged().setStrength(15);
+    npc.getStats().getRanged().setStrength(25);
     npc.getStats().getRanged().setAccuracy(70);
     npc.getInventory().setDropItem(1, item, 100);
 
