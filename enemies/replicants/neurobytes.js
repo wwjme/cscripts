@@ -1,10 +1,9 @@
 function init(event){
     var npc = event.npc;
-    var item = npc.world.createItem(minecraft:air, 1);
+    var item = npc.world.createItem("minecraft:air", 1);
      npc.getStats().setMaxHealth(100);
      npc.getStats().getRanged().setStrength(15);
-     npc.getInventory().setDropItem(1, item, 100);
-     npc.getInventory().setDropItem(2, item, 100);
+     npc.getInventory().setDropItem(0, item, 1);
 }
 
 function died(event) {
