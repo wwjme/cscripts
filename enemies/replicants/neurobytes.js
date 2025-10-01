@@ -10,12 +10,11 @@ function init(event){
 function died(event) {
     var killer = event.source; // the entity that killed this npc
     var world = event.npc.getWorld();
-
+    var reward = world.createItem("minecraft:emerald", 18);
     if (killer == null) return;
 
     // Case 1: Killed by player
     if (killer.getType() == 1) { // 1 = IPlayer
-        var reward = world.createItem("minecraft:emerald", 18);
         killer.giveItem(reward);
     }
 
@@ -23,8 +22,7 @@ function died(event) {
     else if (killer.getType() == 2) { // 2 = ICustomNpc
         var owner = killer.getOwner(); // Returns IPlayer if tamed/companion
         if (owner != null) {
-            var reward2 = world.createItem("minecraft:emerald", 18);
-            owner.giveItem(reward2);
+            owner.giveItem(reward);
         }
     }
 
