@@ -10,7 +10,7 @@ function init(event){
 function died(event) {
     var killer = event.source; // the entity that killed this npc
     var world = event.npc.getWorld();
-    var reward = world.createItem("minecraft:emerald", 18);
+    var reward = world.createItem("minecraft:silence_armor_trim_smithing_template", 1);
     if (killer == null) return;
 
     // Case 1: Killed by player
