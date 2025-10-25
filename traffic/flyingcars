@@ -1,16 +1,10 @@
-// =============================== //
-//      Flying Car Traffic AI      //
-// =============================== //
-// Author: ChatGPT (GPT-5)
-// Description: Autonomous flying cars navigate between junctions,
-// using navigateTo() with directional lane logic.
-// Now using tick() with internal throttling instead of timers.
 
 // -------- CONFIG -------- //
-var laneOffset = 4;     // Distance from junction center to lane
+var laneOffset = 10;     // Distance from junction center to lane
+var flyHeight = 2;      // Lift target Y for better flying nav
 var speed = 1.3;        // Flying car navigation speed
-var checkInterval = 40; // Ticks between updates (40 = 2 seconds)
-var arriveRange = 3;    // Distance threshold for "arrival"
+var checkInterval = 1; // How often to update logic (ticks)
+var arriveRange = 4;    // Distance threshold for "arrival"
 
 // List of junction centers (x, y, z)
 var junctions = [
@@ -26,42 +20,45 @@ var currentDir = null;
 var tickCounter = 0;
 
 // =============================== //
-//            INIT EVENT           //
+//             INIT                //
 // =============================== //
 function init(event) {
     var npc = event.npc;
-    npc.ai.stopOnInteract = true;
+    npc.ai.stopOnInteract = false;
     npc.ai.returnsHome = false;
+    npc.getAi().setNavigationType(1);
 
-    // Assign random initial direction
     var dirs = ["north", "south", "east", "west"];
     currentDir = dirs[Math.floor(Math.random() * dirs.length)];
 
-    currentTarget = null;
-    tickCounter = 0;
+    npc.say("Init dir: " + currentDir);
 }
 
 // =============================== //
-//            TICK LOOP            //
+//             TICK                //
 // =============================== //
 function tick(event) {
     tickCounter++;
-    if (tickCounter % checkInterval != 0) return; // throttle heavy logic
+    if (tickCounter % checkInterval != 0) return;
 
     var npc = event.npc;
     var pos = npc.getPos();
 
-    // 1️⃣ If no target yet — find nearest junction
+    // 1️⃣ If no target yet — find nearest junction and move toward it
     if (!currentTarget) {
         currentTarget = findNearestJunction(pos);
-        if (!currentTarget) return;
+        if (!currentTarget) {
+            npc.say("No junction found.");
+            return;
+        }
 
         var lane = getLanePosition(currentTarget, currentDir);
-        npc.navigateTo(lane.x, currentTarget.y, lane.z, speed);
+        npc.navigateTo(lane.x, currentTarget.y + flyHeight, lane.z, speed);
+        npc.say("Navigating to first target at " + lane.x + ", " + lane.z);
         return;
     }
 
-    // 2️⃣ If near target — pick next junction
+    // 2️⃣ Check if near current target
     if (isNear(pos, currentTarget, arriveRange)) {
         var nextDir = chooseNextDirection(currentDir);
         currentDir = nextDir;
@@ -71,7 +68,15 @@ function tick(event) {
 
         currentTarget = nextJunction;
         var lane = getLanePosition(nextJunction, nextDir);
-        npc.navigateTo(lane.x, nextJunction.y, lane.z, speed);
+        npc.navigateTo(lane.x, nextJunction.y + flyHeight, lane.z, speed);
+        npc.say("Next target: " + lane.x + ", " + lane.z + " dir=" + nextDir);
+    } else {
+        // If navigation canceled or NPC stopped midair, reissue move
+        if (!npc.isNavigating()) {
+            var lane = getLanePosition(currentTarget, currentDir);
+            npc.navigateTo(lane.x, currentTarget.y + flyHeight, lane.z, speed);
+            npc.say("Reissuing navigateTo.");
+        }
     }
 }
 
@@ -79,11 +84,9 @@ function tick(event) {
 //        HELPER FUNCTIONS         //
 // =============================== //
 
-// Get the nearest junction to current position
 function findNearestJunction(pos) {
     var nearest = null;
     var bestDist = 999999;
-
     for each (var j in junctions) {
         var dx = pos.getX() - j.x;
         var dz = pos.getZ() - j.z;
@@ -96,7 +99,6 @@ function findNearestJunction(pos) {
     return nearest;
 }
 
-// Find another random nearby junction
 function findNearbyJunction(current, maxDist) {
     var candidates = [];
     for each (var j in junctions) {
@@ -109,11 +111,9 @@ function findNearbyJunction(current, maxDist) {
     return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-// Calculate position for current lane direction
 function getLanePosition(junction, direction) {
     var x = junction.x;
     var z = junction.z;
-
     switch (direction) {
         case "north": return {x: x, z: z - laneOffset};
         case "south": return {x: x, z: z + laneOffset};
@@ -123,7 +123,6 @@ function getLanePosition(junction, direction) {
     }
 }
 
-// Prevent zig-zagging: cars only go forward, left, or right (no U-turns)
 function chooseNextDirection(fromDir) {
     var choices = {
         north: ["north", "west", "east"],
@@ -135,7 +134,6 @@ function chooseNextDirection(fromDir) {
     return options[Math.floor(Math.random() * options.length)];
 }
 
-// Check if NPC is close to a junction
 function isNear(pos, target, dist) {
     var dx = pos.getX() - target.x;
     var dz = pos.getZ() - target.z;
