@@ -1,15 +1,13 @@
-
 // -------- CONFIG -------- //
-var laneOffset = 10;     // Distance from junction center to lane
-var flyHeight = 2;      // Lift target Y for better flying nav
+var laneOffset = 10;    // Distance from junction center to lane
+var flyHeight = 2;      // Lift target Y relative to NPC pos
 var speed = 1.3;        // Flying car navigation speed
-var checkInterval = 1; // How often to update logic (ticks)
-var arriveRange = 4;    // Distance threshold for "arrival"
+var checkInterval = 1;  // How often to update logic (ticks)
+var arriveRange = 10;   // Distance threshold for "arrival"
 
 // List of junction centers (x, y, z)
 var junctions = [
     {x: 59, y: -54, z: 2},
-    {x: 59, y: -54, z: -76},
     {x: 59, y: -54, z: -76},
     {x: -5, y: -54, z: 3}
 ];
@@ -26,7 +24,8 @@ function init(event) {
     var npc = event.npc;
     npc.ai.stopOnInteract = false;
     npc.ai.returnsHome = false;
-    npc.getAi().setNavigationType(1);
+    npc.getAi().setNavigationType(1); // Flying
+    npc.getAi().setMovingType(1);     // Moving type: wandering allowed
 
     var dirs = ["north", "south", "east", "west"];
     currentDir = dirs[Math.floor(Math.random() * dirs.length)];
@@ -44,40 +43,57 @@ function tick(event) {
     var npc = event.npc;
     var pos = npc.getPos();
 
-    // 1️⃣ If no target yet — find nearest junction and move toward it
+    // If no target yet, set initial
     if (!currentTarget) {
         currentTarget = findNearestJunction(pos);
-        if (!currentTarget) {
-            npc.say("No junction found.");
-            return;
-        }
+        if (!currentTarget) return;
 
-        var lane = getLanePosition(currentTarget, currentDir);
-        npc.navigateTo(lane.x, currentTarget.y + flyHeight, lane.z, speed);
-        npc.say("Navigating to first target at " + lane.x + ", " + lane.z);
+        goToTarget(npc, currentTarget, currentDir);
         return;
     }
 
-    // 2️⃣ Check if near current target
+    // If close to target, pick next
     if (isNear(pos, currentTarget, arriveRange)) {
         var nextDir = chooseNextDirection(currentDir);
         currentDir = nextDir;
 
-        var nextJunction = findNearbyJunction(currentTarget, 200);
+        // 🔹 Only pick junctions that align (no diagonals)
+        var nextJunction = findNearbyAlignedJunction(currentTarget, 200, nextDir);
         if (!nextJunction) nextJunction = findNearestJunction(pos);
 
         currentTarget = nextJunction;
-        var lane = getLanePosition(nextJunction, nextDir);
-        npc.navigateTo(lane.x, nextJunction.y + flyHeight, lane.z, speed);
-        npc.say("Next target: " + lane.x + ", " + lane.z + " dir=" + nextDir);
+        goToTarget(npc, currentTarget, currentDir);
+        npc.say("Next: " + nextDir + " -> (" + currentTarget.x + "," + currentTarget.z + ")");
     } else {
-        // If navigation canceled or NPC stopped midair, reissue move
+        // Navigation may randomly stop — reissue only if far enough
         if (!npc.isNavigating()) {
-            var lane = getLanePosition(currentTarget, currentDir);
-            npc.navigateTo(lane.x, currentTarget.y + flyHeight, lane.z, speed);
-            npc.say("Reissuing navigateTo.");
+            var dist = getDist2D(pos, currentTarget);
+            if (dist > arriveRange + 1) {
+                goToTarget(npc, currentTarget, currentDir);
+                npc.say("Reissuing navigateTo (" + dist.toFixed(1) + ")");
+            }
         }
     }
+}
+
+// =============================== //
+//         MOVE FUNCTION           //
+// =============================== //
+function goToTarget(npc, target, dir) {
+    var lane = getLanePosition(target, dir);
+    var pos = npc.getPos();
+
+    // Add small randomization to avoid pathfinder deadlocks
+    var rx = lane.x + (Math.random() - 0.5);
+    var rz = lane.z + (Math.random() - 0.5);
+    var ry = pos.getY() + flyHeight;
+
+    // Prevent reissue if target too close
+    var dx = pos.getX() - rx;
+    var dz = pos.getZ() - rz;
+    if (Math.sqrt(dx * dx + dz * dz) < 1.5) return;
+
+    npc.navigateTo(rx, ry, rz, speed);
 }
 
 // =============================== //
@@ -99,13 +115,18 @@ function findNearestJunction(pos) {
     return nearest;
 }
 
-function findNearbyJunction(current, maxDist) {
+// 🔹 NEW: Find only junctions that align straight with current direction
+function findNearbyAlignedJunction(current, maxDist, dir) {
     var candidates = [];
     for each (var j in junctions) {
         var dx = j.x - current.x;
         var dz = j.z - current.z;
         var dist = Math.sqrt(dx*dx + dz*dz);
-        if (dist > 1 && dist < maxDist) candidates.push(j);
+        if (dist < 1 || dist > maxDist) continue;
+
+        // Only allow junctions directly in line — not diagonal
+        if ((dir === "north" || dir === "south") && Math.abs(dx) < 2) candidates.push(j);
+        else if ((dir === "east" || dir === "west") && Math.abs(dz) < 2) candidates.push(j);
     }
     if (candidates.length == 0) return null;
     return candidates[Math.floor(Math.random() * candidates.length)];
@@ -135,7 +156,11 @@ function chooseNextDirection(fromDir) {
 }
 
 function isNear(pos, target, dist) {
+    return getDist2D(pos, target) <= dist;
+}
+
+function getDist2D(pos, target) {
     var dx = pos.getX() - target.x;
     var dz = pos.getZ() - target.z;
-    return Math.sqrt(dx*dx + dz*dz) <= dist;
+    return Math.sqrt(dx * dx + dz * dz);
 }
