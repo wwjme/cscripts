@@ -1,7 +1,9 @@
-var laneOffset = 15;   
-var speed = 20;   
-var checkInterval = 1;    
-var arriveRange = 2;    
+var laneOffset = 15;
+var speed = 20;               // navigateTo speed (keeps rotation/navigation behavior)
+var motionSpeed = 0.45;       // speed used for npc.setMotionX/Y/Z (adjustable)
+var rotateTicksThreshold = 2; // ticks to wait after navigateTo before switching to setMotion
+var checkInterval = 1;
+var arriveRange = 2;
 
 var junctions = [
     {x: 59, y: -54, z: 2},
@@ -44,13 +46,19 @@ var ENTRY_CORNERS = {
     "north": "SE", "south": "NW", "east": "SW", "west": "NE"
 };
 
+// --- Motion state ---
+var motionMode = "none"; // "none" | "navigate_then_motion" | "setmotion"
+var navigateTicks = 0;   // counter used when in navigate_then_motion
+
 function init(event) {
     var npc = event.npc;
     npc.ai.stopOnInteract = false;
     npc.ai.returnsHome = false;
     npc.getAi().setNavigationType(1);
     npc.getAi().setMovingType(0);
+
     buildTrafficMap();
+
     var spawnPos = npc.getPos();
     var nearest = findNearestJunction(spawnPos);
     var startCorner = cornerNames[Math.floor(Math.random() * 4)];
@@ -82,10 +90,49 @@ function createPoint(junction, corner, type, x, z) {
 
 function tick(event) {
     if (++tickCounter % checkInterval !== 0) return;
+
     var npc = event.npc;
     if (!currentTarget) return;
-    if (getDist2D(npc.getPos(), currentTarget) <= arriveRange) handleArrival(npc);
-    else if (!npc.isNavigating()) goToTarget(npc, currentTarget);
+
+    var pos = npc.getPos();
+
+    // If we are in "navigate_then_motion" mode, count ticks and switch after threshold
+    if (motionMode === "navigate_then_motion") {
+        navigateTicks++;
+        if (navigateTicks >= rotateTicksThreshold) {
+            // cancel path navigation (if possible) and switch to setMotion
+            try { npc.getAi().stopNavigation(); } catch (e) {}
+            switchToSetMotion(npc, currentTarget);
+        }
+    }
+
+    // If using setMotion, but we've arrived, stop motion and handle arrival
+    if (motionMode === "setmotion") {
+        if (getDist2D(pos, currentTarget) <= arriveRange) {
+            // stop motion
+            npc.setMotionX(0);
+            npc.setMotionY(0);
+            npc.setMotionZ(0);
+            motionMode = "none";
+            handleArrival(npc);
+            return;
+        } else {
+            // keep setMotion along heading (no need to reissue each tick; but recalc to correct small drift)
+            updateSetMotionDirection(npc, currentTarget);
+            return;
+        }
+    }
+
+    // Default behavior: not in setMotion; rely on navigation system & arrival checks
+    if (getDist2D(pos, currentTarget) <= arriveRange) {
+        // reached by navigateTo
+        handleArrival(npc);
+    } else {
+        if (!npc.isNavigating() && motionMode !== "navigate_then_motion") {
+            // fall back to navigation if nothing is moving the NPC
+            goToTarget(npc, currentTarget);
+        }
+    }
 }
 
 function handleArrival(npc) {
@@ -151,6 +198,64 @@ function prepareUturn(npc, junction, startCorner) {
             if (outPt) uturnQueue.push(outPt);
         }
     }
+}
+
+// --- NEW goToTarget that triggers rotate-then-motion behavior ---
+function goToTarget(npc, target) {
+    if (!target) return;
+    // stop any setMotion immediately
+    try {
+        npc.setMotionX(0);
+        npc.setMotionY(0);
+        npc.setMotionZ(0);
+    } catch (e) {}
+    // use navigateTo to rotate properly first
+    try {
+        npc.navigateTo(target.x, target.y, target.z, speed);
+    } catch (e) {}
+    motionMode = "navigate_then_motion";
+    navigateTicks = 0;
+    // debug
+    try { npc.say("navigateTo -> rotating to corner " + target.corner + " at (" + target.parent.x + "," + target.parent.z + ")"); } catch (e) {}
+}
+
+// --- switch from navigate to setMotion (called after rotateTicksThreshold) ---
+function switchToSetMotion(npc, target) {
+    if (!target) return;
+    // compute horizontal direction vector
+    var pos = npc.getPos();
+    var dx = target.x - pos.x;
+    var dz = target.z - pos.z;
+    var dist = Math.sqrt(dx*dx + dz*dz);
+    if (dist === 0) {
+        // nothing to do
+        motionMode = "none";
+        return;
+    }
+    var mx = (dx / dist) * motionSpeed;
+    var mz = (dz / dist) * motionSpeed;
+    try {
+        npc.setMotionX(mx);
+        npc.setMotionY(0);
+        npc.setMotionZ(mz);
+    } catch (e) {}
+    motionMode = "setmotion";
+    try { npc.say("Switching to setMotion speed=" + motionSpeed.toFixed(3)); } catch (e) {}
+}
+
+// --- recalc setMotion direction (small corrections while moving) ---
+function updateSetMotionDirection(npc, target) {
+    var pos = npc.getPos();
+    var dx = target.x - pos.x;
+    var dz = target.z - pos.z;
+    var dist = Math.sqrt(dx*dx + dz*dz);
+    if (dist === 0) return;
+    var mx = (dx / dist) * motionSpeed;
+    var mz = (dz / dist) * motionSpeed;
+    try {
+        npc.setMotionX(mx);
+        npc.setMotionZ(mz);
+    } catch (e) {}
 }
 
 function getPoint(junction, corner, type) {
@@ -219,7 +324,7 @@ function findNearestJunction(pos) {
     return best;
 }
 
-function goToTarget(npc, target) {
+function goToTargetDirect(npc, target) {
     if (!target) return;
-    npc.navigateTo(target.x, target.y, target.z, speed);
+    try { npc.navigateTo(target.x, target.y, target.z, speed); } catch (e) {}
 }
