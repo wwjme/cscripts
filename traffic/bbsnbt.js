@@ -3,25 +3,28 @@ function init(event) {
     var world = npc.getWorld();
     var API = event.API;
 
-    // Full, properly nested NBT structure (not JSON!)
+    // Full NBT for the traffic/policespinner model item
     var nbtString = '{' +
         'id:"bbs:model",' +
         'Count:1b,' +
         'tag:{' +
-            'display:{Lore:["(+NBT)"]},' +
+            'display:{Lore:["\\"(+NBT)\\""]},' +
             'BlockEntityTag:{' +
                 'id:"bbs:model_block_entity",' +
                 'Properties:{' +
                     'global:0b,' +
                     'enabled:1b,' +
                     'shadow:0b,' +
+                    'transformInventory:{t:[0.0f,0.0f,0.0f],r:[0.0f,0.0f,0.0f],r2:[0.0f,0.0f,0.0f],s:[1.0f,1.0f,1.0f]},' +
+                    'transformThirdPerson:{t:[0.0f,0.0f,0.0f],r:[0.0f,0.0f,0.0f],r2:[0.0f,0.0f,0.0f],s:[1.0f,1.0f,1.0f]},' +
+                    'transform:{t:[0.0f,-0.812f,0.0f],r:[0.0f,0.0f,0.0f],r2:[0.0f,0.0f,0.0f],s:[23.25f,24.25f,25.25f]},' +
                     'form:{' +
                         'hitboxWidth:0.5f,' +
                         'hitboxSneakMultiplier:0.9f,' +
                         'lighting:1.0f,' +
                         'visible:1b,' +
                         'color:-1,' +
-                        'model:"Edrone2",' +
+                        'model:"traffic/policespinner/",' +
                         'hitboxHeight:1.8f,' +
                         'step_height:0.5f,' +
                         'uiScale:1.0f,' +
@@ -29,26 +32,26 @@ function init(event) {
                         'hp:20.0f,' +
                         'shaderShadow:1b,' +
                         'movement_speed:0.1f,' +
-                        'keybind:0,' +
                         'hitboxEyeHeight:0.9f,' +
-                        'name:"",' +
+                        'keybind:0,' +
                         'id:"bbs:model",' +
                         'transform_overlay:{t:[0.0f,0.0f,0.0f],r:[0.0f,0.0f,0.0f],r2:[0.0f,0.0f,0.0f],s:[1.0f,1.0f,1.0f]},' +
                         'transformFirstPerson:{t:[0.0f,0.0f,-0.25f],r:[0.0f,0.0f,0.0f],r2:[0.0f,0.0f,0.0f],s:[1.0f,1.0f,1.0f]},' +
                         'transformThirdPerson:{t:[0.0f,0.0f,0.0f],r:[0.0f,0.0f,0.0f],r2:[0.0f,0.0f,0.0f],s:[1.0f,1.0f,1.0f]},' +
                         'transformInventory:{t:[0.0f,0.0f,0.0f],r:[0.0f,0.0f,0.0f],r2:[0.0f,0.0f,0.0f],s:[1.0f,1.0f,1.0f]},' +
-                        'transform:{t:[0.0f,-0.906f,0.0f],r:[0.0f,0.0f,0.0f],r2:[0.0f,0.0f,0.0f],s:[1.0f,3.25f,1.0f]}' +
+                        'transform:{t:[0.0f,0.0f,0.0f],r:[0.0f,0.0f,0.0f],r2:[0.0f,0.0f,0.0f],s:[1.0f,1.0f,1.0f]},' +
+                        'name:""' +
                     '}' +
                 '}' +
             '}' +
         '}' +
     '}';
 
-    // Convert to NBT and create an actual item
+    // Create the item from NBT
     var nbt = API.stringToNbt(nbtString);
     var item = world.createItemFromNbt(nbt);
 
-    // Give to NPC
+    // Give it to the NPC
     npc.setMainhandItem(item);
-    npc.say("✅ Custom BBS model applied: Edrone2");
+    npc.say("✅ Model applied: traffic/policespinner");
 }
